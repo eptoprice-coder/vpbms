@@ -1,0 +1,42 @@
+version: '3.9'
+
+services:
+  mongo:
+    image: mongo:7
+    container_name: vpbms-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  backend:
+    build: ./backend
+    container_name: vpbms-backend
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      MONGO_URI: mongodb://mongo:27017/vpbms
+      JWT_SECRET: ${JWT_SECRET:-change_this_super_secret_key}
+      JWT_EXPIRES_IN: 7d
+      JWT_REFRESH_EXPIRES_IN: 30d
+      CLIENT_URL: http://localhost:3000
+
+  frontend:
+    build: ./frontend
+    container_name: vpbms-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:5000
+
+volumes:
+  mongo_data:
