@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
+const mongoose = require('mongoose');
 
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 
@@ -56,6 +57,27 @@ app.use('/api/', apiLimiter);
 app.use('/api/auth/login', authLimiter);
 
 app.get('/api/health', (req, res) => res.json({ success: true, message: 'VPBMS API is running', time: new Date() }));
+
+// TEMPORARY diagnostic route — remove after debugging the login issue.
+// Reports exactly which database/host this running instance is connected to,
+// plus a live count of documents in the users collection, with no auth required.
+app.get('/api/debug-db', async (req, res) => {
+  try {
+    const usersCount = await mongoose.connection.db.collection('users').countDocuments();
+    const adminUser = await mongoose.connection.db.collection('users').findOne({ username: 'admin' }, { projection: { username: 1, role: 1, status: 1 } });
+    res.json({
+      success: true,
+      dbName: mongoose.connection.name,
+      host: mongoose.connection.host,
+      readyState: mongoose.connection.readyState, // 1 = connected
+      usersCount,
+      adminUserFound: !!adminUser,
+      adminUser: adminUser || null,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 app.use('/api/auth', authRoutes);
 app.use('/api/admin/vendors', vendorAdminRoutes);
