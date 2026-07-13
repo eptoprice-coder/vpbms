@@ -47,7 +47,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-navy-950 p-4">
       <div className="w-full max-w-md glass-card p-8 bg-navy-900/70 border-navy-700/50">
         <div className="flex flex-col items-center mb-6">
-          <EptomartLogo size={48} showTagline className="flex-col text-center mb-2" />
+          <EptomartLogo size={96} className="mb-2 shadow-lg" />
           <h1 className="text-lg font-semibold text-white mt-3">Vendor Price Broadcast</h1>
           <p className="text-sm text-gray-400">Sign in to manage your daily prices</p>
         </div>

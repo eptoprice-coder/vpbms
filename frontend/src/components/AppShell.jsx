@@ -64,7 +64,7 @@ export default function AppShell({ role, children }) {
         )}
 
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-16 flex items-center justify-between px-4 md:px-6 border-b border-gray-100 dark:border-gray-800 bg-white/70 dark:bg-navy-900/70 backdrop-blur-xl sticky top-0 z-30">
+          <header className="h-20 flex items-center justify-between px-4 md:px-6 border-b border-gray-100 dark:border-gray-800 bg-white/70 dark:bg-navy-900/70 backdrop-blur-xl sticky top-0 z-30">
             <div className="flex items-center gap-3">
               <button className="md:hidden text-gray-500" onClick={() => setMobileOpen(true)}>
                 <Menu size={22} />
@@ -98,8 +98,8 @@ export default function AppShell({ role, children }) {
 function SidebarContent({ nav, pathname, onNavigate }) {
   return (
     <>
-      <div className="h-16 flex items-center px-5 border-b border-gray-100 dark:border-navy-800">
-        <EptomartLogo size={30} />
+      <div className="h-20 flex items-center px-5 border-b border-gray-100 dark:border-navy-800">
+        <EptomartLogo size={48} />
       </div>
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {nav.map((item) => {
