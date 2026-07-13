@@ -1,10 +1,11 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Leaf, Lock, User, Loader2 } from 'lucide-react';
+import { Lock, User, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
+import EptomartLogo from '@/components/ui/EptomartLogo';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -43,24 +44,22 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 via-white to-brand-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 p-4">
-      <div className="w-full max-w-md glass-card p-8">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-navy-950 p-4">
+      <div className="w-full max-w-md glass-card p-8 bg-navy-900/70 border-navy-700/50">
         <div className="flex flex-col items-center mb-6">
-          <div className="h-14 w-14 rounded-2xl bg-brand-600 flex items-center justify-center shadow-lg mb-3">
-            <Leaf className="text-white" size={28} />
-          </div>
-          <h1 className="text-xl font-semibold">Vendor Price Broadcast</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Sign in to manage your daily prices</p>
+          <EptomartLogo size={48} showTagline className="flex-col text-center mb-2" />
+          <h1 className="text-lg font-semibold text-white mt-3">Vendor Price Broadcast</h1>
+          <p className="text-sm text-gray-400">Sign in to manage your daily prices</p>
         </div>
 
         {!forgotOpen ? (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">Username</label>
+              <label className="text-xs font-medium text-gray-400 mb-1 block">Username</label>
               <div className="relative">
-                <User className="absolute left-3 top-2.5 text-gray-400" size={18} />
+                <User className="absolute left-3 top-2.5 text-gray-500" size={18} />
                 <input
-                  className="input-field pl-10"
+                  className="input-field pl-10 bg-navy-800 border-navy-600 text-white placeholder:text-gray-500 focus:ring-accent-500"
                   value={form.username}
                   onChange={(e) => setForm({ ...form, username: e.target.value })}
                   placeholder="e.g. freshmart"
@@ -69,12 +68,12 @@ export default function LoginPage() {
               </div>
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">Password</label>
+              <label className="text-xs font-medium text-gray-400 mb-1 block">Password</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-2.5 text-gray-400" size={18} />
+                <Lock className="absolute left-3 top-2.5 text-gray-500" size={18} />
                 <input
                   type="password"
-                  className="input-field pl-10"
+                  className="input-field pl-10 bg-navy-800 border-navy-600 text-white placeholder:text-gray-500 focus:ring-accent-500"
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                   placeholder="••••••••"
@@ -82,7 +81,7 @@ export default function LoginPage() {
               </div>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+              <label className="flex items-center gap-2 text-gray-300">
                 <input
                   type="checkbox"
                   checked={form.remember}
@@ -90,25 +89,28 @@ export default function LoginPage() {
                 />
                 Remember me
               </label>
-              <button type="button" onClick={() => setForgotOpen(true)} className="text-brand-700 hover:underline">
+              <button type="button" onClick={() => setForgotOpen(true)} className="text-accent-400 hover:underline">
                 Forgot password?
               </button>
             </div>
-            <button type="submit" disabled={loading} className="btn-primary w-full justify-center">
+            <button type="submit" disabled={loading} className="btn-primary w-full justify-center bg-gradient-to-r from-brand-600 to-accent-600 hover:from-brand-700 hover:to-accent-700">
               {loading ? <Loader2 className="animate-spin" size={18} /> : 'Sign In'}
             </button>
           </form>
         ) : (
           <div className="space-y-4">
-            <p className="text-sm text-gray-500">Enter your username. Your Super Admin will help you reset your password.</p>
-            <input className="input-field" value={forgotUsername} onChange={(e) => setForgotUsername(e.target.value)} placeholder="Username" />
+            <p className="text-sm text-gray-400">Enter your username. Your Super Admin will help you reset your password.</p>
+            <input className="input-field bg-navy-800 border-navy-600 text-white placeholder:text-gray-500" value={forgotUsername} onChange={(e) => setForgotUsername(e.target.value)} placeholder="Username" />
             <div className="flex gap-2">
-              <button onClick={handleForgot} className="btn-primary flex-1 justify-center">Request Reset</button>
+              <button onClick={handleForgot} className="btn-primary flex-1 justify-center bg-gradient-to-r from-brand-600 to-accent-600">Request Reset</button>
               <button onClick={() => setForgotOpen(false)} className="btn-secondary flex-1 justify-center">Cancel</button>
             </div>
           </div>
         )}
       </div>
+      <p className="text-xs text-gray-500 mt-6">
+        Powered by <span className="font-semibold bg-gradient-to-r from-brand-500 to-accent-500 bg-clip-text text-transparent">Eptomart</span>
+      </p>
     </div>
   );
 }

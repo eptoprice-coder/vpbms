@@ -4,12 +4,13 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard, Users, Package, Tags, ClipboardList, BarChart3,
-  MessageCircle, History, Contact, Menu, X, Sun, Moon, LogOut, Leaf, Search,
+  MessageCircle, History, Contact, Menu, Sun, Moon, LogOut, Search,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useUiStore } from '@/store/uiStore';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
+import EptomartLogo from '@/components/ui/EptomartLogo';
 
 const ADMIN_NAV = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -46,9 +47,9 @@ export default function AppShell({ role, children }) {
 
   return (
     <div className={theme === 'dark' ? 'dark' : ''}>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex">
+      <div className="min-h-screen bg-gray-50 dark:bg-navy-950 flex">
         {/* Sidebar - desktop */}
-        <aside className="hidden md:flex md:flex-col w-64 shrink-0 border-r border-gray-100 dark:border-gray-800 bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl">
+        <aside className="hidden md:flex md:flex-col w-64 shrink-0 border-r border-gray-100 dark:border-gray-800 bg-white/70 dark:bg-navy-900/70 backdrop-blur-xl">
           <SidebarContent nav={nav} pathname={pathname} />
         </aside>
 
@@ -56,14 +57,14 @@ export default function AppShell({ role, children }) {
         {mobileOpen && (
           <div className="fixed inset-0 z-40 md:hidden">
             <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
-            <aside className="absolute left-0 top-0 h-full w-64 bg-white dark:bg-gray-900 shadow-xl">
+            <aside className="absolute left-0 top-0 h-full w-64 bg-white dark:bg-navy-900 shadow-xl">
               <SidebarContent nav={nav} pathname={pathname} onNavigate={() => setMobileOpen(false)} />
             </aside>
           </div>
         )}
 
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-16 flex items-center justify-between px-4 md:px-6 border-b border-gray-100 dark:border-gray-800 bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl sticky top-0 z-30">
+          <header className="h-16 flex items-center justify-between px-4 md:px-6 border-b border-gray-100 dark:border-gray-800 bg-white/70 dark:bg-navy-900/70 backdrop-blur-xl sticky top-0 z-30">
             <div className="flex items-center gap-3">
               <button className="md:hidden text-gray-500" onClick={() => setMobileOpen(true)}>
                 <Menu size={22} />
@@ -97,11 +98,8 @@ export default function AppShell({ role, children }) {
 function SidebarContent({ nav, pathname, onNavigate }) {
   return (
     <>
-      <div className="h-16 flex items-center gap-2 px-5 border-b border-gray-100 dark:border-gray-800">
-        <div className="h-9 w-9 rounded-xl bg-brand-600 flex items-center justify-center">
-          <Leaf className="text-white" size={18} />
-        </div>
-        <span className="font-semibold text-sm leading-tight">VPBMS</span>
+      <div className="h-16 flex items-center px-5 border-b border-gray-100 dark:border-navy-800">
+        <EptomartLogo size={30} />
       </div>
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {nav.map((item) => {
@@ -114,8 +112,8 @@ function SidebarContent({ nav, pathname, onNavigate }) {
               onClick={onNavigate}
               className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors ${
                 active
-                  ? 'bg-brand-600 text-white shadow-md'
-                  : 'text-gray-600 dark:text-gray-300 hover:bg-brand-50 dark:hover:bg-gray-800'
+                  ? 'bg-gradient-to-r from-brand-600 to-accent-600 text-white shadow-md'
+                  : 'text-gray-600 dark:text-gray-300 hover:bg-brand-50 dark:hover:bg-navy-800'
               }`}
             >
               <Icon size={18} />
@@ -124,6 +122,12 @@ function SidebarContent({ nav, pathname, onNavigate }) {
           );
         })}
       </nav>
+      <div className="px-5 py-4 border-t border-gray-100 dark:border-navy-800 text-[11px] text-gray-400">
+        Powered by{' '}
+        <span className="font-semibold bg-gradient-to-r from-brand-500 to-accent-500 bg-clip-text text-transparent">
+          Eptomart
+        </span>
+      </div>
     </>
   );
 }
