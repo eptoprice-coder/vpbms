@@ -43,6 +43,70 @@ const listVendorProducts = asyncHandler(async (req, res) => {
   });
 });
 
+// POST /api/vendor/products - vendor adds a new product to their own price sheet.
+// Creates a master Product entry (scoped to the vendor's own category) plus a
+// VendorProduct row so it immediately shows up in this vendor's price sheet.
+// Also visible to the Super Admin's Product Master, same as any other product.
+const addVendorProduct = asyncHandler(async (req, res) => {
+  const { name, tamilName, unit, currentPrice } = req.body;
+  if (!name || !unit) {
+    return res.status(400).json({ success: false, message: 'Product name and unit are required.' });
+  }
+
+  const vendor = req.vendor;
+  const categoryId = vendor.category._id || vendor.category;
+
+  const product = await Product.create({
+    name,
+    tamilName,
+    category: categoryId,
+    unit,
+    defaultQuantity: 0,
+    status: 'active',
+  });
+
+  const vp = await VendorProduct.create({
+    vendor: vendor._id,
+    product: product._id,
+    quantityAvailable: 0,
+    currentPrice: currentPrice ? Number(currentPrice) : 0,
+    status: 'active',
+    lastUpdated: new Date(),
+  });
+
+  if (vp.currentPrice > 0) {
+    await PriceHistory.create({
+      vendor: vendor._id,
+      product: product._id,
+      oldPrice: 0,
+      newPrice: vp.currentPrice,
+      difference: vp.currentPrice,
+      updatedBy: req.user._id,
+    });
+  }
+
+  await logActivity({
+    user: req.user._id,
+    vendor: vendor._id,
+    action: 'PRODUCT_UPDATED',
+    description: `Vendor added new product "${name}"`,
+    ip: req.ip,
+  });
+
+  const populated = await VendorProduct.findById(vp._id).populate('product');
+  res.status(201).json({
+    success: true,
+    data: {
+      _id: populated._id,
+      product: populated.product,
+      quantityAvailable: populated.quantityAvailable,
+      currentPrice: populated.currentPrice,
+      status: populated.status,
+      lastUpdated: populated.lastUpdated,
+    },
+  });
+});
+
 // PUT /api/vendor/products/bulk-update - apply new prices, write PriceHistory (never overwritten)
 const bulkUpdatePrices = asyncHandler(async (req, res) => {
   const { updates } = req.body; // [{ vendorProductId, newPrice, quantityAvailable }]
@@ -140,4 +204,4 @@ const exportPriceHistory = asyncHandler(async (req, res) => {
   return exportToPDF(res, { title: 'Price Update History', columns, rows });
 });
 
-module.exports = { listVendorProducts, bulkUpdatePrices, priceHistory, exportPriceHistory };
+module.exports = { listVendorProducts, addVendorProduct, bulkUpdatePrices, priceHistory, exportPriceHistory };
