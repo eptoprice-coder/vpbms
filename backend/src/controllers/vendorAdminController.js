@@ -45,7 +45,7 @@ const listVendors = asyncHandler(async (req, res) => {
 
 // POST /api/admin/vendors
 const createVendor = asyncHandler(async (req, res) => {
-  const { username, password, name, email, phone, businessName, category, address, location, whatsappNumber } = req.body;
+  const { username, password, name, email, phone, businessName, category, address, location, whatsappNumber, logo } = req.body;
 
   if (!username || !password || !name || !businessName || !category) {
     return res.status(400).json({ success: false, message: 'Missing required fields.' });
@@ -71,6 +71,9 @@ const createVendor = asyncHandler(async (req, res) => {
     location,
     whatsappNumber,
     createdBy: req.user._id,
+    ...(logo && /^data:image\/(png|jpe?g|webp);base64,/.test(logo) && logo.length <= 400000
+      ? { settings: { logo } }
+      : {}),
   });
 
   await logActivity({
@@ -89,13 +92,22 @@ const updateVendor = asyncHandler(async (req, res) => {
   const vendor = await Vendor.findById(req.params.id);
   if (!vendor) return res.status(404).json({ success: false, message: 'Vendor not found.' });
 
-  const { name, email, phone, businessName, category, address, location, whatsappNumber } = req.body;
+  const { name, email, phone, businessName, category, address, location, whatsappNumber, logo } = req.body;
 
   if (businessName) vendor.businessName = businessName;
   if (category) vendor.category = category;
   if (address !== undefined) vendor.address = address;
   if (location !== undefined) vendor.location = location;
   if (whatsappNumber !== undefined) vendor.whatsappNumber = whatsappNumber;
+  if (logo !== undefined) {
+    if (logo && !/^data:image\/(png|jpe?g|webp);base64,/.test(logo)) {
+      return res.status(400).json({ success: false, message: 'Logo must be a PNG, JPEG, or WebP image.' });
+    }
+    if (logo && logo.length > 400000) {
+      return res.status(400).json({ success: false, message: 'Logo image is too large. Please use a smaller image.' });
+    }
+    vendor.settings.logo = logo || '';
+  }
   await vendor.save();
 
   const user = await User.findById(vendor.user);

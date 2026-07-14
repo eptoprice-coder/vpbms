@@ -1,6 +1,6 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
-import { Plus, Edit, Ban, Trash2, KeyRound, BarChart3 } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Plus, Edit, Ban, Trash2, KeyRound, BarChart3, Camera, Store, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import AppShell from '@/components/AppShell';
 import DataTable from '@/components/ui/DataTable';
@@ -21,8 +21,28 @@ export default function VendorsPage() {
   const [form, setForm] = useState(emptyForm());
 
   function emptyForm() {
-    return { username: '', password: '', name: '', email: '', phone: '', businessName: '', category: '', address: '', location: '', whatsappNumber: '' };
+    return { username: '', password: '', name: '', email: '', phone: '', businessName: '', category: '', address: '', location: '', whatsappNumber: '', logo: '' };
   }
+
+  const logoFileRef = useRef(null);
+
+  // Downscale any uploaded image to a compact square data URL.
+  const handleLogoFile = (file) => {
+    if (!file) return;
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      const s = Math.min(img.width, img.height);
+      ctx.drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, 256, 256);
+      URL.revokeObjectURL(url);
+      setForm((f) => ({ ...f, logo: canvas.toDataURL('image/png') }));
+    };
+    img.src = url;
+  };
 
   const load = async () => {
     const [v, c] = await Promise.all([api.get('/admin/vendors', { params: { search } }), api.get('/categories')]);
@@ -40,6 +60,7 @@ export default function VendorsPage() {
       username: v.user?.username || '', password: '', name: v.user?.name || '', email: v.user?.email || '',
       phone: v.user?.phone || '', businessName: v.businessName, category: v.category?._id || '',
       address: v.address || '', location: v.location || '', whatsappNumber: v.whatsappNumber || '',
+      logo: v.settings?.logo || '',
     });
     setModalOpen(true);
   };
@@ -79,12 +100,24 @@ export default function VendorsPage() {
   };
 
   const columns = useMemo(() => [
-    { header: 'Vendor', accessorKey: 'businessName', cell: (i) => (
-      <div>
-        <div className="font-medium">{i.row.original.businessName}</div>
-        <div className="text-xs text-gray-400">@{i.row.original.user?.username}</div>
-      </div>
-    )},
+    { header: 'Vendor', accessorKey: 'businessName', cell: (i) => {
+      const v = i.row.original;
+      return (
+        <div className="flex items-center gap-2.5">
+          {v.settings?.logo ? (
+            <img src={v.settings.logo} alt="" className="h-8 w-8 rounded-lg object-cover border border-white/15 shrink-0" />
+          ) : (
+            <div className="h-8 w-8 rounded-lg flex items-center justify-center bg-gradient-to-br from-brand-500/25 to-accent-500/25 text-brand-600 dark:text-brand-300 text-xs font-bold shrink-0">
+              {(v.businessName || '?').charAt(0).toUpperCase()}
+            </div>
+          )}
+          <div>
+            <div className="font-medium">{v.businessName}</div>
+            <div className="text-xs text-gray-400">@{v.user?.username}</div>
+          </div>
+        </div>
+      );
+    }},
     { header: 'Category', accessorKey: 'category.name', cell: (i) => i.row.original.category?.name },
     { header: 'Status', accessorKey: 'status', cell: (i) => (
       <span className={`px-2 py-1 rounded-full text-xs ${i.row.original.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
@@ -128,6 +161,26 @@ export default function VendorsPage() {
         maxWidth="max-w-xl"
         footer={<><button className="btn-secondary" onClick={() => setModalOpen(false)}>Cancel</button><button className="btn-primary" onClick={submit}>Save</button></>}
       >
+        <div className="col-span-2 flex items-center gap-4 mb-4">
+          <div className="relative h-16 w-16 rounded-2xl overflow-hidden border border-white/20 shrink-0">
+            {form.logo ? (
+              <img src={form.logo} alt="Vendor logo" className="h-full w-full object-cover" />
+            ) : (
+              <span className="h-full w-full flex items-center justify-center bg-gradient-to-br from-brand-500/25 to-accent-500/25 text-brand-600 dark:text-brand-300"><Store size={24} /></span>
+            )}
+          </div>
+          <div>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => logoFileRef.current?.click()} className="btn-secondary text-xs"><Camera size={14} /> Upload logo</button>
+              {form.logo && (
+                <button type="button" onClick={() => setForm({ ...form, logo: '' })} className="btn-secondary text-xs text-red-500"><X size={14} /> Remove</button>
+              )}
+            </div>
+            <p className="text-[11px] text-gray-400 mt-1.5">Shown in the vendor&apos;s app header and dashboard.</p>
+          </div>
+          <input ref={logoFileRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden"
+            onChange={(e) => { handleLogoFile(e.target.files?.[0]); e.target.value = ''; }} />
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Username" value={form.username} onChange={(v) => setForm({ ...form, username: v })} disabled={!!editing} />
           {!editing && <Field label="Password" type="password" value={form.password} onChange={(v) => setForm({ ...form, password: v })} />}
