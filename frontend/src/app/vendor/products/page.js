@@ -113,7 +113,7 @@ export default function VendorProductsPage() {
         <div className="flex gap-2">
           <button onClick={() => exportFile('excel')} className="btn-secondary"><Download size={16} /> Excel</button>
           <button onClick={() => exportFile('pdf')} className="btn-secondary"><Download size={16} /> PDF</button>
-          <button onClick={openAdd} className="btn-secondary"><Plus size={16} /> Add Product</button>
+          <button onClick={openAdd} className="btn-premium px-4 py-2"><Plus size={16} /> Add Product</button>
           <button onClick={saveAll} disabled={saving} className="btn-primary"><Save size={16} /> Update Prices</button>
         </div>
       </div>

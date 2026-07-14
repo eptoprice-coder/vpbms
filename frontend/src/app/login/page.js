@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Lock, User, Loader2, ArrowRight, Sparkles } from 'lucide-react';
+import { Lock, User, Loader2, ArrowRight, Sparkles, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
@@ -26,6 +26,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotUsername, setForgotUsername] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -117,12 +118,21 @@ export default function LoginPage() {
               <div className="relative group">
                 <Lock className="absolute left-3.5 top-3 text-gray-500 transition-colors group-focus-within:text-accent-400" size={18} />
                 <input
-                  type="password"
-                  className="input-premium pl-11"
+                  type={showPassword ? 'text' : 'password'}
+                  className="input-premium pl-11 pr-11"
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                   placeholder="••••••••"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((s) => !s)}
+                  className="absolute right-3.5 top-3 text-gray-500 hover:text-gray-300 transition-colors"
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
             </div>
             <div className="flex items-center justify-between text-sm animate-rise delay-5">
