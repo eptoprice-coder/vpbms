@@ -47,9 +47,16 @@ export default function AppShell({ role, children }) {
 
   return (
     <div className={theme === 'dark' ? 'dark' : ''}>
-      <div className="min-h-screen bg-gray-50 dark:bg-navy-950 flex">
+      <div className="relative min-h-screen bg-gray-50 dark:bg-navy-950 flex overflow-hidden">
+        {/* ambient aurora backdrop */}
+        <div className="pointer-events-none fixed inset-0 opacity-40 dark:opacity-100" aria-hidden="true">
+          <div className="aurora-blob aurora-1 w-[30rem] h-[30rem] -top-40 left-1/4" />
+          <div className="aurora-blob aurora-2 w-[26rem] h-[26rem] -bottom-32 right-0" />
+          <div className="hidden dark:block absolute inset-0 bg-grid-faint" />
+        </div>
+
         {/* Sidebar - desktop */}
-        <aside className="hidden md:flex md:flex-col w-64 shrink-0 border-r border-gray-100 dark:border-gray-800 bg-white/70 dark:bg-navy-900/70 backdrop-blur-xl">
+        <aside className="relative hidden md:flex md:flex-col w-64 shrink-0 border-r border-gray-100 dark:border-gray-800 bg-white/70 dark:bg-navy-900/70 backdrop-blur-xl">
           <SidebarContent nav={nav} pathname={pathname} />
         </aside>
 
@@ -63,7 +70,7 @@ export default function AppShell({ role, children }) {
           </div>
         )}
 
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="relative flex-1 flex flex-col min-w-0">
           <header className="h-20 flex items-center justify-between px-4 md:px-6 border-b border-gray-100 dark:border-gray-800 bg-white/70 dark:bg-navy-900/70 backdrop-blur-xl sticky top-0 z-30">
             <div className="flex items-center gap-3">
               <button className="md:hidden text-gray-500" onClick={() => setMobileOpen(true)}>

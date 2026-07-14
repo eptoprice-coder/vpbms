@@ -1,11 +1,22 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Lock, User, Loader2 } from 'lucide-react';
+import { Lock, User, Loader2, ArrowRight, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import EptomartLogo from '@/components/ui/EptomartLogo';
+
+const PARTICLES = [
+  { left: '8%', size: 3, duration: 16, delay: 0 },
+  { left: '18%', size: 2, duration: 22, delay: 4 },
+  { left: '31%', size: 4, duration: 18, delay: 9 },
+  { left: '46%', size: 2, duration: 25, delay: 2 },
+  { left: '58%', size: 3, duration: 20, delay: 12 },
+  { left: '69%', size: 2, duration: 17, delay: 6 },
+  { left: '81%', size: 4, duration: 23, delay: 10 },
+  { left: '92%', size: 2, duration: 19, delay: 3 },
+];
 
 export default function LoginPage() {
   const router = useRouter();
@@ -44,22 +55,59 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-navy-950 p-4">
-      <div className="w-full max-w-md glass-card p-8 bg-navy-900/70 border-navy-700/50">
-        <div className="flex flex-col items-center mb-6">
-          <EptomartLogo size={96} className="mb-2 shadow-lg" />
-          <h1 className="text-lg font-semibold text-white mt-3">Vendor Price Broadcast</h1>
-          <p className="text-sm text-gray-400">Sign in to manage your daily prices</p>
+    <div className="relative min-h-screen flex flex-col items-center justify-center bg-navy-950 p-4 overflow-hidden">
+      {/* ambient background */}
+      <div className="absolute inset-0" aria-hidden="true">
+        <div className="aurora-blob aurora-1 w-[34rem] h-[34rem] -top-40 -left-32" />
+        <div className="aurora-blob aurora-2 w-[30rem] h-[30rem] -bottom-32 -right-24" />
+        <div className="aurora-blob aurora-3 w-[38rem] h-[38rem] top-1/3 left-1/3" />
+        <div className="absolute inset-0 bg-grid-faint" />
+        {PARTICLES.map((p, i) => (
+          <span
+            key={i}
+            className="particle bottom-0"
+            style={{ left: p.left, width: p.size, height: p.size, animationDuration: `${p.duration}s`, animationDelay: `${p.delay}s` }}
+          />
+        ))}
+        {/* vignette */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(5,9,20,0.8)_100%)]" />
+      </div>
+
+      <div className="relative w-full max-w-md premium-card p-8 animate-rise">
+        {/* soft glow behind the card content */}
+        <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-64 h-64 rounded-full bg-brand-500/10 blur-3xl pointer-events-none" aria-hidden="true" />
+
+        <div className="relative flex flex-col items-center mb-8">
+          <div className="relative animate-rise delay-1">
+            {/* rotating gradient ring */}
+            <div className="absolute -inset-2 rounded-2xl animate-spin-slow opacity-70" aria-hidden="true"
+              style={{
+                background: 'conic-gradient(from 0deg, transparent 0%, rgba(34,197,94,0.6) 12%, transparent 30%, transparent 55%, rgba(249,115,22,0.6) 68%, transparent 85%)',
+                WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                WebkitMaskComposite: 'xor',
+                maskComposite: 'exclude',
+                padding: 2,
+              }}
+            />
+            <div className="rounded-2xl animate-logo-glow">
+              <EptomartLogo size={96} />
+            </div>
+          </div>
+          <h1 className="text-2xl font-bold mt-5 text-gradient-animated animate-rise delay-2">Vendor Price Broadcast</h1>
+          <p className="text-sm text-gray-400 mt-1.5 flex items-center gap-1.5 animate-rise delay-3">
+            <Sparkles size={13} className="text-accent-400" />
+            Sign in to manage your daily prices
+          </p>
         </div>
 
         {!forgotOpen ? (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="text-xs font-medium text-gray-400 mb-1 block">Username</label>
-              <div className="relative">
-                <User className="absolute left-3 top-2.5 text-gray-500" size={18} />
+          <form onSubmit={handleSubmit} className="relative space-y-5">
+            <div className="animate-rise delay-3">
+              <label className="text-xs font-medium text-gray-400 mb-1.5 block tracking-wide uppercase">Username</label>
+              <div className="relative group">
+                <User className="absolute left-3.5 top-3 text-gray-500 transition-colors group-focus-within:text-brand-400" size={18} />
                 <input
-                  className="input-field pl-10 bg-navy-800 border-navy-600 text-white placeholder:text-gray-500 focus:ring-accent-500"
+                  className="input-premium pl-11"
                   value={form.username}
                   onChange={(e) => setForm({ ...form, username: e.target.value })}
                   placeholder="e.g. freshmart"
@@ -67,49 +115,57 @@ export default function LoginPage() {
                 />
               </div>
             </div>
-            <div>
-              <label className="text-xs font-medium text-gray-400 mb-1 block">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-2.5 text-gray-500" size={18} />
+            <div className="animate-rise delay-4">
+              <label className="text-xs font-medium text-gray-400 mb-1.5 block tracking-wide uppercase">Password</label>
+              <div className="relative group">
+                <Lock className="absolute left-3.5 top-3 text-gray-500 transition-colors group-focus-within:text-accent-400" size={18} />
                 <input
                   type="password"
-                  className="input-field pl-10 bg-navy-800 border-navy-600 text-white placeholder:text-gray-500 focus:ring-accent-500"
+                  className="input-premium pl-11"
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                   placeholder="••••••••"
                 />
               </div>
             </div>
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center gap-2 text-gray-300">
+            <div className="flex items-center justify-between text-sm animate-rise delay-5">
+              <label className="flex items-center gap-2 text-gray-300 cursor-pointer select-none">
                 <input
                   type="checkbox"
+                  className="accent-brand-500"
                   checked={form.remember}
                   onChange={(e) => setForm({ ...form, remember: e.target.checked })}
                 />
                 Remember me
               </label>
-              <button type="button" onClick={() => setForgotOpen(true)} className="text-accent-400 hover:underline">
+              <button type="button" onClick={() => setForgotOpen(true)} className="text-accent-400 hover:text-accent-300 transition-colors hover:underline underline-offset-4">
                 Forgot password?
               </button>
             </div>
-            <button type="submit" disabled={loading} className="btn-primary w-full justify-center bg-gradient-to-r from-brand-600 to-accent-600 hover:from-brand-700 hover:to-accent-700">
-              {loading ? <Loader2 className="animate-spin" size={18} /> : 'Sign In'}
+            <button type="submit" disabled={loading} className="btn-premium w-full animate-rise delay-6">
+              {loading ? (
+                <Loader2 className="animate-spin" size={18} />
+              ) : (
+                <>
+                  Sign In <ArrowRight size={16} />
+                </>
+              )}
             </button>
           </form>
         ) : (
-          <div className="space-y-4">
+          <div className="relative space-y-4 animate-rise">
             <p className="text-sm text-gray-400">Enter your username. Your Super Admin will help you reset your password.</p>
-            <input className="input-field bg-navy-800 border-navy-600 text-white placeholder:text-gray-500" value={forgotUsername} onChange={(e) => setForgotUsername(e.target.value)} placeholder="Username" />
+            <input className="input-premium" value={forgotUsername} onChange={(e) => setForgotUsername(e.target.value)} placeholder="Username" />
             <div className="flex gap-2">
-              <button onClick={handleForgot} className="btn-primary flex-1 justify-center bg-gradient-to-r from-brand-600 to-accent-600">Request Reset</button>
+              <button onClick={handleForgot} className="btn-premium flex-1">Request Reset</button>
               <button onClick={() => setForgotOpen(false)} className="btn-secondary flex-1 justify-center">Cancel</button>
             </div>
           </div>
         )}
       </div>
-      <p className="text-xs text-gray-500 mt-6">
-        Powered by <span className="font-semibold bg-gradient-to-r from-brand-500 to-accent-500 bg-clip-text text-transparent">Eptomart</span>
+
+      <p className="relative text-xs text-gray-500 mt-7 animate-rise delay-6">
+        Powered by <span className="font-semibold text-gradient-animated">Eptomart</span>
       </p>
     </div>
   );
