@@ -194,6 +194,19 @@ const vendorActivity = asyncHandler(async (req, res) => {
   res.json({ success: true, data: logs });
 });
 
+// GET /api/admin/vendors/:id/price-history?product=<id>&limit=500
+const vendorPriceHistory = asyncHandler(async (req, res) => {
+  const { product, limit = 500 } = req.query;
+  const filter = { vendor: req.params.id };
+  if (product) filter.product = product;
+  const history = await PriceHistory.find(filter)
+    .populate('product', 'name tamilName unit')
+    .populate('updatedBy', 'name username')
+    .sort({ createdAt: -1 })
+    .limit(Math.min(Number(limit), 1000));
+  res.json({ success: true, data: history });
+});
+
 // GET /api/admin/vendors/:id/reports
 const vendorReports = asyncHandler(async (req, res) => {
   const vendorId = req.params.id;
@@ -213,5 +226,6 @@ module.exports = {
   deleteVendor,
   resetVendorPassword,
   vendorActivity,
+  vendorPriceHistory,
   vendorReports,
 };

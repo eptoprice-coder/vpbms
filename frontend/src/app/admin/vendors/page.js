@@ -6,6 +6,7 @@ import AppShell from '@/components/AppShell';
 import DataTable from '@/components/ui/DataTable';
 import Modal from '@/components/ui/Modal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import PriceTrendChart from '@/components/ui/PriceTrendChart';
 import { useRequireAuth } from '@/hooks/useAuth';
 import api from '@/lib/api';
 
@@ -209,7 +210,7 @@ export default function VendorsPage() {
         onCancel={() => setConfirmTarget(null)}
       />
 
-      <Modal open={!!reportTarget} onClose={() => setReportTarget(null)} title={`Reports — ${reportTarget?.businessName}`}>
+      <Modal open={!!reportTarget} onClose={() => setReportTarget(null)} title={`Reports — ${reportTarget?.businessName}`} maxWidth="max-w-2xl">
         <VendorReportPanel vendorId={reportTarget?._id} />
       </Modal>
     </AppShell>
@@ -227,16 +228,61 @@ function Field({ label, value, onChange, type = 'text', disabled }) {
 
 function VendorReportPanel({ vendorId }) {
   const [data, setData] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState('');
+
   useEffect(() => {
     if (!vendorId) return;
+    setSelectedProduct('');
     api.get(`/admin/vendors/${vendorId}/reports`).then((r) => setData(r.data.data));
+    api.get(`/admin/vendors/${vendorId}/price-history`).then((r) => setHistory(r.data.data));
   }, [vendorId]);
+
+  const products = useMemo(() => {
+    const map = new Map();
+    history.forEach((h) => {
+      if (h.product?._id && !map.has(h.product._id)) map.set(h.product._id, h.product);
+    });
+    return [...map.values()].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  }, [history]);
+
+  const entries = useMemo(
+    () => (selectedProduct ? history.filter((h) => h.product?._id === selectedProduct) : []),
+    [history, selectedProduct]
+  );
+  const productObj = products.find((p) => p._id === selectedProduct);
+
   if (!data) return <p className="text-sm text-gray-400">Loading...</p>;
   return (
-    <div className="grid grid-cols-3 gap-3 text-sm">
-      <div className="glass-card p-3 text-center"><div className="text-xl font-semibold">{data.priceUpdates}</div><div className="text-gray-400 text-xs">Price Updates</div></div>
-      <div className="glass-card p-3 text-center"><div className="text-xl font-semibold">{data.messagesSent}</div><div className="text-gray-400 text-xs">Messages Sent</div></div>
-      <div className="glass-card p-3 text-center"><div className="text-xl font-semibold">{data.customers}</div><div className="text-gray-400 text-xs">Customers</div></div>
+    <div className="space-y-4">
+      <div className="grid grid-cols-3 gap-3 text-sm">
+        <div className="glass-card p-3 text-center"><div className="text-xl font-semibold">{data.priceUpdates}</div><div className="text-gray-400 text-xs">Price Updates</div></div>
+        <div className="glass-card p-3 text-center"><div className="text-xl font-semibold">{data.messagesSent}</div><div className="text-gray-400 text-xs">Messages Sent</div></div>
+        <div className="glass-card p-3 text-center"><div className="text-xl font-semibold">{data.customers}</div><div className="text-gray-400 text-xs">Customers</div></div>
+      </div>
+
+      <div className="glass-card p-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
+          <h3 className="text-sm font-semibold">Product Price Trend</h3>
+          <select
+            className="input-field sm:max-w-xs sm:ml-auto"
+            value={selectedProduct}
+            onChange={(e) => setSelectedProduct(e.target.value)}
+          >
+            <option value="">Select a product…</option>
+            {products.map((p) => (
+              <option key={p._id} value={p._id}>{p.name}{p.unit ? ` (per ${p.unit})` : ''}</option>
+            ))}
+          </select>
+        </div>
+        {selectedProduct ? (
+          <PriceTrendChart entries={entries} productName={productObj?.name} unit={productObj?.unit} />
+        ) : (
+          <p className="text-sm text-gray-400 py-4 text-center">
+            {products.length ? 'Pick a product to see its price movement.' : 'No price history recorded for this vendor yet.'}
+          </p>
+        )}
+      </div>
     </div>
   );
 }

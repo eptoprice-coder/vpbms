@@ -13,5 +13,6 @@ router.delete('/:id', ctrl.deleteVendor);
 router.post('/:id/reset-password', ctrl.resetVendorPassword);
 router.get('/:id/activity', ctrl.vendorActivity);
 router.get('/:id/reports', ctrl.vendorReports);
+router.get('/:id/price-history', ctrl.vendorPriceHistory);
 
 module.exports = router;

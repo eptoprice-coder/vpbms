@@ -1,8 +1,9 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
-import { Download } from 'lucide-react';
+import { Download, LineChart as LineChartIcon } from 'lucide-react';
 import AppShell from '@/components/AppShell';
 import DataTable from '@/components/ui/DataTable';
+import PriceTrendChart from '@/components/ui/PriceTrendChart';
 import { useRequireAuth } from '@/hooks/useAuth';
 import api from '@/lib/api';
 
@@ -11,6 +12,7 @@ export default function HistoryPage() {
   const [tab, setTab] = useState('price');
   const [priceHistory, setPriceHistory] = useState([]);
   const [messageHistory, setMessageHistory] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState('');
 
   useEffect(() => {
     if (!ready) return;
@@ -19,6 +21,22 @@ export default function HistoryPage() {
   }, [ready]);
 
   const exportPriceFile = (format) => window.open(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/vendor/products/history/export?format=${format}`, '_blank');
+
+  // Unique products present in the history, for the trend selector.
+  const products = useMemo(() => {
+    const map = new Map();
+    priceHistory.forEach((h) => {
+      if (h.product?._id && !map.has(h.product._id)) map.set(h.product._id, h.product);
+    });
+    return [...map.values()].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  }, [priceHistory]);
+
+  const selectedEntries = useMemo(
+    () => (selectedProduct ? priceHistory.filter((h) => h.product?._id === selectedProduct) : []),
+    [priceHistory, selectedProduct]
+  );
+  const selectedProductObj = products.find((p) => p._id === selectedProduct);
+  const visibleHistory = selectedProduct ? selectedEntries : priceHistory;
 
   const priceColumns = useMemo(() => [
     { header: 'Date', accessorKey: 'createdAt', cell: (i) => new Date(i.row.original.createdAt).toLocaleString() },
@@ -66,7 +84,40 @@ export default function HistoryPage() {
         </div>
       </div>
 
-      {tab === 'price' ? <DataTable columns={priceColumns} data={priceHistory} pageSize={15} /> : <DataTable columns={messageColumns} data={messageHistory} pageSize={15} />}
+      {tab === 'price' && (
+        <div className="premium-card p-5 mb-4 animate-rise">
+          <div className="relative">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-1">
+              <h2 className="text-sm font-semibold flex items-center gap-2">
+                <LineChartIcon size={16} className="text-brand-500" /> Price Trend
+              </h2>
+              <select
+                className="input-field sm:max-w-xs sm:ml-auto"
+                value={selectedProduct}
+                onChange={(e) => setSelectedProduct(e.target.value)}
+              >
+                <option value="">Select a product to view its trend…</option>
+                {products.map((p) => (
+                  <option key={p._id} value={p._id}>{p.name}{p.unit ? ` (per ${p.unit})` : ''}</option>
+                ))}
+              </select>
+            </div>
+            {selectedProduct ? (
+              <PriceTrendChart
+                entries={selectedEntries}
+                productName={selectedProductObj?.name}
+                unit={selectedProductObj?.unit}
+              />
+            ) : (
+              <p className="text-sm text-gray-400 py-6 text-center">
+                Pick a product above to see how its price has moved over time.
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {tab === 'price' ? <DataTable columns={priceColumns} data={visibleHistory} pageSize={15} /> : <DataTable columns={messageColumns} data={messageHistory} pageSize={15} />}
     </AppShell>
   );
 }
