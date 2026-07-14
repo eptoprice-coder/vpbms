@@ -14,6 +14,7 @@ const vendorSchema = new mongoose.Schema(
       theme: { type: String, enum: ['light', 'dark'], default: 'light' },
       messageFooter: { type: String, default: 'Thank you.' },
       messageHeader: { type: String, default: '🌿 Fresh Market Price List' },
+      logo: { type: String, default: '' }, // vendor's own logo as a compact data URL
     },
   },
   { timestamps: true }

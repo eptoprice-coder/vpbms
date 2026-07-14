@@ -90,6 +90,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/admin/activity', activityRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/vendor/reports', vendorReportRoutes);
+app.use('/api/vendor/profile', require('./routes/vendorProfileRoutes'));
 
 app.use(notFound);
 app.use(errorHandler);

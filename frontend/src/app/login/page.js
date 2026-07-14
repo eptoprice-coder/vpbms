@@ -55,7 +55,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center bg-navy-950 p-4 overflow-hidden">
+    // "dark" wrapper forces dark-theme styles here regardless of the user's saved theme —
+    // this page is always rendered on the navy background.
+    <div className="dark relative min-h-screen flex flex-col items-center justify-center bg-navy-950 p-4 overflow-hidden">
       {/* ambient background */}
       <div className="absolute inset-0" aria-hidden="true">
         <div className="aurora-blob aurora-1 w-[34rem] h-[34rem] -top-40 -left-32" />
@@ -86,7 +88,7 @@ export default function LoginPage() {
             <EptomartLogo size={110} className="relative" />
           </div>
           <h1 className="text-[1.7rem] font-extrabold tracking-tight mt-5 text-white animate-rise delay-2">
-            Vendor <span className="text-gradient-animated">Price Broadcast</span>
+            Eptomart <span className="text-gradient-animated">Partner Hub</span>
           </h1>
           <p className="text-[0.925rem] text-gray-300 mt-2 flex items-center gap-1.5 animate-rise delay-3">
             <Sparkles size={14} className="text-accent-400" />

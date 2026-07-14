@@ -3,13 +3,13 @@ import { Toaster } from 'react-hot-toast';
 import PwaRegister from '@/components/PwaRegister';
 
 export const metadata = {
-  title: 'VPBMS | Vendor Price Broadcast Management',
-  description: 'Manage daily prices and broadcast price lists to customers via WhatsApp.',
+  title: 'Eptomart Partner Hub',
+  description: 'Your daily price studio — update prices and broadcast lists to customers via WhatsApp.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Eptomart VPB',
+    title: 'Partner Hub',
   },
   icons: {
     icon: [

@@ -1,7 +1,7 @@
 {
-  "name": "Vendor Price Broadcast — Eptomart",
-  "short_name": "Eptomart VPB",
-  "description": "Manage daily prices and broadcast price lists to customers via WhatsApp.",
+  "name": "Eptomart Partner Hub",
+  "short_name": "Partner Hub",
+  "description": "Your daily price studio — update prices and broadcast lists to customers via WhatsApp.",
   "id": "/",
   "start_url": "/login",
   "scope": "/",
