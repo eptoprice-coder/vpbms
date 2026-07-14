@@ -11,6 +11,7 @@ import { useUiStore } from '@/store/uiStore';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import EptomartLogo from '@/components/ui/EptomartLogo';
+import PoweredBy from '@/components/ui/PoweredBy';
 
 const ADMIN_NAV = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -138,11 +139,8 @@ function SidebarContent({ nav, pathname, onNavigate }) {
           );
         })}
       </nav>
-      <div className="px-5 py-4 border-t border-gray-100 dark:border-navy-800 text-[11px] text-gray-400">
-        Powered by{' '}
-        <span className="font-semibold bg-gradient-to-r from-brand-500 to-accent-500 bg-clip-text text-transparent">
-          Eptomart
-        </span>
+      <div className="px-5 py-4 border-t border-gray-100 dark:border-navy-800">
+        <PoweredBy compact />
       </div>
     </>
   );

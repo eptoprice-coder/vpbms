@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import EptomartLogo from '@/components/ui/EptomartLogo';
+import PoweredBy from '@/components/ui/PoweredBy';
 
 const PARTICLES = [
   { left: '8%', size: 3, duration: 16, delay: 0 },
@@ -160,9 +161,9 @@ export default function LoginPage() {
         )}
       </div>
 
-      <p className="relative text-xs text-gray-400 mt-7 animate-rise delay-6">
-        Powered by <span className="font-semibold text-gradient-animated">Eptomart</span>
-      </p>
+      <div className="relative mt-8 animate-rise delay-6">
+        <PoweredBy />
+      </div>
     </div>
   );
 }
