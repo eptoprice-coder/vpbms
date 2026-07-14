@@ -30,35 +30,58 @@ const prepareMessage = asyncHandler(async (req, res) => {
 });
 
 // POST /api/vendor/whatsapp/send
-// Body: { message, customerIds: [] }
-// Creates one wa.me deep link per customer (official method — no unofficial WhatsApp APIs).
+// Body: { message, customerIds: [], groups: [] }
+// Creates one wa.me deep link per customer, and a chat-picker link per group
+// (official methods only — no unofficial WhatsApp APIs).
 const sendMessage = asyncHandler(async (req, res) => {
-  const { message, customerIds } = req.body;
-  if (!message || !Array.isArray(customerIds) || !customerIds.length) {
-    return res.status(400).json({ success: false, message: 'Message and at least one customer are required.' });
+  const { message, customerIds = [], groups = [] } = req.body;
+  if (!message || ((!Array.isArray(customerIds) || !customerIds.length) && (!Array.isArray(groups) || !groups.length))) {
+    return res.status(400).json({ success: false, message: 'Message and at least one customer or group are required.' });
   }
 
-  const customers = await Customer.find({ _id: { $in: customerIds }, vendor: req.vendor._id, status: 'active' });
+  const customers = customerIds.length
+    ? await Customer.find({ _id: { $in: customerIds }, vendor: req.vendor._id, status: 'active' })
+    : [];
 
-  const records = await Promise.all(
+  const customerRecords = await Promise.all(
     customers.map(async (customer) => {
       const waLink = buildWaLink(customer.mobile, message);
       const record = await MessageHistory.create({
         vendor: req.vendor._id,
         customer: customer._id,
+        recipientType: 'customer',
         message,
         status: 'pending',
         waLink,
       });
-      return { customerId: customer._id, name: customer.name, mobile: customer.mobile, waLink, historyId: record._id };
+      return { customerId: customer._id, type: 'customer', name: customer.name, mobile: customer.mobile, waLink, historyId: record._id };
     })
   );
+
+  // Group sends: WhatsApp has no official deep link that targets a specific group,
+  // so we open WhatsApp with the message pre-filled and the user picks the group (one tap).
+  const groupRecords = await Promise.all(
+    (Array.isArray(groups) ? groups : []).filter(Boolean).map(async (groupName) => {
+      const waLink = `https://wa.me/?text=${encodeURIComponent(message)}`;
+      const record = await MessageHistory.create({
+        vendor: req.vendor._id,
+        groupName: String(groupName).trim(),
+        recipientType: 'group',
+        message,
+        status: 'pending',
+        waLink,
+      });
+      return { type: 'group', name: String(groupName).trim(), mobile: 'Group', waLink, historyId: record._id };
+    })
+  );
+
+  const records = [...customerRecords, ...groupRecords];
 
   await logActivity({
     user: req.user._id,
     vendor: req.vendor._id,
     action: 'WHATSAPP_SENT',
-    description: `Prepared WhatsApp price list for ${records.length} customer(s)`,
+    description: `Prepared WhatsApp price list for ${customerRecords.length} customer(s)${groupRecords.length ? ` and ${groupRecords.length} group(s)` : ''}`,
     ip: req.ip,
   });
 

@@ -1,0 +1,29 @@
+{
+  "name": "Vendor Price Broadcast — Eptomart",
+  "short_name": "Eptomart VPB",
+  "description": "Manage daily prices and broadcast price lists to customers via WhatsApp.",
+  "id": "/",
+  "start_url": "/login",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#050914",
+  "background_color": "#050914",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Send Price List",
+      "url": "/vendor/whatsapp",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Products & Prices",
+      "url": "/vendor/products",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

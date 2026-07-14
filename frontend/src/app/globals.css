@@ -86,11 +86,11 @@
     background: rgba(255, 255, 255, 0.08);
   }
 
-  /* Animated gradient headline text */
+  /* Animated gradient headline text — bright, high-contrast sheen */
   .text-gradient-animated {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(90deg, #4ade80, #fb923c, #4ade80);
-    background-size: 200% 100%;
+    background-image: linear-gradient(100deg, #86efac 0%, #d9fbe6 22%, #ffffff 40%, #ffe8cf 58%, #fdba74 78%, #86efac 100%);
+    background-size: 220% 100%;
     animation: gradient-pan 5s ease infinite;
   }
 }

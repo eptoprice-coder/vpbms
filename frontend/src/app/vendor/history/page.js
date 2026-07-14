@@ -34,8 +34,14 @@ export default function HistoryPage() {
 
   const messageColumns = useMemo(() => [
     { header: 'Date', accessorKey: 'createdAt', cell: (i) => new Date(i.row.original.createdAt).toLocaleString() },
-    { header: 'Customer', accessorKey: 'customer.name', cell: (i) => i.row.original.customer?.name },
-    { header: 'Mobile', accessorKey: 'customer.mobile', cell: (i) => i.row.original.customer?.mobile },
+    { header: 'Recipient', accessorKey: 'customer.name', cell: (i) => {
+      const r = i.row.original;
+      return r.recipientType === 'group' ? <span>👥 {r.groupName || 'Group'}</span> : r.customer?.name;
+    }},
+    { header: 'Mobile', accessorKey: 'customer.mobile', cell: (i) => {
+      const r = i.row.original;
+      return r.recipientType === 'group' ? 'Group' : r.customer?.mobile;
+    }},
     { header: 'Status', accessorKey: 'status', cell: (i) => (
       <span className={`px-2 py-1 rounded-full text-xs ${i.row.original.status === 'sent' ? 'bg-green-100 text-green-700' : i.row.original.status === 'failed' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>{i.row.original.status}</span>
     )},

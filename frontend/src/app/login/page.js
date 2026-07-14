@@ -79,23 +79,17 @@ export default function LoginPage() {
 
         <div className="relative flex flex-col items-center mb-8">
           <div className="relative animate-rise delay-1">
-            {/* rotating gradient ring */}
-            <div className="absolute -inset-2 rounded-2xl animate-spin-slow opacity-70" aria-hidden="true"
-              style={{
-                background: 'conic-gradient(from 0deg, transparent 0%, rgba(34,197,94,0.6) 12%, transparent 30%, transparent 55%, rgba(249,115,22,0.6) 68%, transparent 85%)',
-                WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                WebkitMaskComposite: 'xor',
-                maskComposite: 'exclude',
-                padding: 2,
-              }}
+            {/* soft halo behind the transparent logo */}
+            <div className="absolute inset-0 scale-150 rounded-full blur-2xl opacity-60 pointer-events-none" aria-hidden="true"
+              style={{ background: 'radial-gradient(circle, rgba(34,197,94,0.35), rgba(249,115,22,0.2) 55%, transparent 75%)' }}
             />
-            <div className="rounded-2xl animate-logo-glow">
-              <EptomartLogo size={96} />
-            </div>
+            <EptomartLogo size={110} className="relative" />
           </div>
-          <h1 className="text-2xl font-bold mt-5 text-gradient-animated animate-rise delay-2">Vendor Price Broadcast</h1>
-          <p className="text-sm text-gray-400 mt-1.5 flex items-center gap-1.5 animate-rise delay-3">
-            <Sparkles size={13} className="text-accent-400" />
+          <h1 className="text-[1.7rem] font-extrabold tracking-tight mt-5 text-white animate-rise delay-2">
+            Vendor <span className="text-gradient-animated">Price Broadcast</span>
+          </h1>
+          <p className="text-[0.925rem] text-gray-300 mt-2 flex items-center gap-1.5 animate-rise delay-3">
+            <Sparkles size={14} className="text-accent-400" />
             Sign in to manage your daily prices
           </p>
         </div>
@@ -103,7 +97,7 @@ export default function LoginPage() {
         {!forgotOpen ? (
           <form onSubmit={handleSubmit} className="relative space-y-5">
             <div className="animate-rise delay-3">
-              <label className="text-xs font-medium text-gray-400 mb-1.5 block tracking-wide uppercase">Username</label>
+              <label className="text-xs font-semibold text-gray-300 mb-1.5 block tracking-wider uppercase">Username</label>
               <div className="relative group">
                 <User className="absolute left-3.5 top-3 text-gray-500 transition-colors group-focus-within:text-brand-400" size={18} />
                 <input
@@ -116,7 +110,7 @@ export default function LoginPage() {
               </div>
             </div>
             <div className="animate-rise delay-4">
-              <label className="text-xs font-medium text-gray-400 mb-1.5 block tracking-wide uppercase">Password</label>
+              <label className="text-xs font-semibold text-gray-300 mb-1.5 block tracking-wider uppercase">Password</label>
               <div className="relative group">
                 <Lock className="absolute left-3.5 top-3 text-gray-500 transition-colors group-focus-within:text-accent-400" size={18} />
                 <input
@@ -164,7 +158,7 @@ export default function LoginPage() {
         )}
       </div>
 
-      <p className="relative text-xs text-gray-500 mt-7 animate-rise delay-6">
+      <p className="relative text-xs text-gray-400 mt-7 animate-rise delay-6">
         Powered by <span className="font-semibold text-gradient-animated">Eptomart</span>
       </p>
     </div>
