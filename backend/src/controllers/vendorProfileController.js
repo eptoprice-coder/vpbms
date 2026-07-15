@@ -11,7 +11,7 @@ const getProfile = asyncHandler(async (req, res) => {
 // PATCH /api/vendor/profile
 // Vendors personalize their workspace: logo, message header/footer, WhatsApp number.
 const updateProfile = asyncHandler(async (req, res) => {
-  const { logo, messageHeader, messageFooter, whatsappNumber } = req.body;
+  const { logo, messageHeader, messageFooter, whatsappNumber, shareFormat } = req.body;
 
   const vendor = await Vendor.findById(req.vendor._id);
   if (!vendor) return res.status(404).json({ success: false, message: 'Vendor not found.' });
@@ -25,6 +25,7 @@ const updateProfile = asyncHandler(async (req, res) => {
     }
     vendor.settings.logo = logo || '';
   }
+  if (shareFormat !== undefined && ['text', 'pdf'].includes(shareFormat)) vendor.settings.shareFormat = shareFormat;
   if (messageHeader !== undefined) vendor.settings.messageHeader = String(messageHeader).slice(0, 200);
   if (messageFooter !== undefined) vendor.settings.messageFooter = String(messageFooter).slice(0, 200);
   if (whatsappNumber !== undefined) vendor.whatsappNumber = String(whatsappNumber).trim();

@@ -30,7 +30,7 @@ function linkForApp(waLink, app) {
 
 export default function WhatsappSendPage() {
   const { ready } = useRequireAuth('vendor');
-  const { vendor } = useAuthStore();
+  const { token, user, vendor, setAuth } = useAuthStore();
   const [message, setMessage] = useState('');
   const [payload, setPayload] = useState(null); // structured prepare response (items, header, timestamp info)
   const [products, setProducts] = useState([]);
@@ -51,7 +51,18 @@ export default function WhatsappSendPage() {
   const [rememberApp, setRememberApp] = useState(false);
   const [pendingAction, setPendingAction] = useState(null); // fn to run once an app is chosen
 
-  const shareFormat = payload?.shareFormat || vendor?.settings?.shareFormat || 'text';
+  // The vendor picks the format themselves (Message or PDF); their choice is saved to their profile.
+  const [shareFormat, setShareFormat] = useState('text');
+  useEffect(() => {
+    setShareFormat(vendor?.settings?.shareFormat || 'text');
+  }, [vendor?.settings?.shareFormat]);
+
+  const pickFormat = (fmt) => {
+    setShareFormat(fmt);
+    api.patch('/vendor/profile', { shareFormat: fmt })
+      .then(({ data }) => setAuth({ token, user, vendor: data.data }))
+      .catch(() => {});
+  };
 
   useEffect(() => {
     setWaApp(localStorage.getItem('vpbms_wa_app') || 'ask');
@@ -61,8 +72,7 @@ export default function WhatsappSendPage() {
     if (!ready) return;
     api.get('/vendor/customers', { params: { limit: 500 } }).then((r) => {
       setCustomers(r.data.data);
-      // Everyone selected by default — vendor unchecks who to skip.
-      setSelected(Object.fromEntries(r.data.data.map((c) => [c._id, true])));
+      // Contacts start unchecked — use "All" to select everyone.
     });
     api.get('/vendor/products').then((r) => {
       const list = r.data.data;
@@ -306,11 +316,29 @@ export default function WhatsappSendPage() {
           <div>
             <h1 className="text-2xl font-bold text-gradient-animated">Send WhatsApp Price List</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Everything is pre-selected — remove what you don&apos;t want, prepare, and send.
-              {shareFormat === 'pdf' && <span className="ml-1 font-semibold text-accent-500">PDF format (set by admin).</span>}
+              Items are pre-selected — pick your customers, prepare, and send.
             </p>
           </div>
-          <div className="flex items-center gap-2 self-start md:self-center">
+          <div className="flex items-center gap-2 self-start md:self-center flex-wrap">
+            {/* Format toggle — the vendor's own choice, remembered on their profile */}
+            <div className="inline-flex rounded-xl border border-gray-300 dark:border-white/15 overflow-hidden">
+              <button
+                onClick={() => pickFormat('text')}
+                className={`px-3 py-2 text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+                  shareFormat === 'text' ? 'bg-gradient-to-r from-brand-600 to-brand-500 text-white' : 'bg-white dark:bg-navy-800 text-gray-600 dark:text-gray-300'
+                }`}
+              >
+                <MessageCircle size={13} /> Message
+              </button>
+              <button
+                onClick={() => pickFormat('pdf')}
+                className={`px-3 py-2 text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+                  shareFormat === 'pdf' ? 'bg-gradient-to-r from-accent-600 to-accent-500 text-white' : 'bg-white dark:bg-navy-800 text-gray-600 dark:text-gray-300'
+                }`}
+              >
+                <FileText size={13} /> PDF
+              </button>
+            </div>
             {isAndroid() && (
               <select className="input-field w-auto text-xs" value={waApp} onChange={(e) => setAppPref(e.target.value)} title="Which WhatsApp app to open">
                 <option value="ask">Ask which WhatsApp</option>
@@ -436,8 +464,8 @@ export default function WhatsappSendPage() {
                 Recipients ({selectedCount})
               </h2>
               <div className="flex gap-1.5">
-                <button onClick={selectAll} className="btn-secondary text-[11px] px-2 py-1">All</button>
-                <button onClick={clearAll} className="btn-secondary text-[11px] px-2 py-1">None</button>
+                <button onClick={selectAll} className="btn-secondary text-[11px] px-2 py-1">Select All</button>
+                <button onClick={clearAll} className="btn-secondary text-[11px] px-2 py-1">Deselect</button>
               </div>
             </div>
             <div className="relative mb-1.5">

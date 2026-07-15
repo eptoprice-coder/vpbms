@@ -201,7 +201,7 @@ export default function VendorsPage() {
           <Field label="Address" value={form.address} onChange={(v) => setForm({ ...form, address: v })} />
           <Field label="Location" value={form.location} onChange={(v) => setForm({ ...form, location: v })} />
           <div>
-            <label className="text-xs text-gray-500 mb-1 block">Price List Share Format</label>
+            <label className="text-xs text-gray-500 mb-1 block">Default Share Format (vendor can change)</label>
             <select className="input-field" value={form.shareFormat} onChange={(e) => setForm({ ...form, shareFormat: e.target.value })}>
               <option value="text">Normal message (text)</option>
               <option value="pdf">PDF document</option>
