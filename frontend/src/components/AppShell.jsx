@@ -50,7 +50,7 @@ export default function AppShell({ role, children }) {
     <div className={theme === 'dark' ? 'dark' : ''}>
       <div className="relative min-h-screen bg-gray-50 dark:bg-navy-950 flex overflow-hidden">
         {/* ambient aurora backdrop */}
-        <div className="pointer-events-none fixed inset-0 opacity-40 dark:opacity-100" aria-hidden="true">
+        <div className="pointer-events-none fixed inset-0 opacity-[0.18] dark:opacity-100" aria-hidden="true">
           <div className="aurora-blob aurora-1 w-[30rem] h-[30rem] -top-40 left-1/4" />
           <div className="aurora-blob aurora-2 w-[26rem] h-[26rem] -bottom-32 right-0" />
           <div className="hidden dark:block absolute inset-0 bg-grid-faint" />
