@@ -65,7 +65,7 @@ function AvailabilityCell({ row, onToggled }) {
       }`}
     >
       {available ? <PackageCheck size={12} /> : <PackageX size={12} />}
-      {available ? 'In stock' : 'Out'}
+      {available ? 'In stock' : 'No stock'}
     </button>
   );
 }
