@@ -188,74 +188,126 @@ export default function WhatsappSendPage() {
     setCursor((c) => Math.min(c + 1, queue.length));
   };
 
-  // ——— PDF price list (admin-selected format) ———
+  // ——— PDF price list — formal business-document layout ———
+  // jsPDF's built-in fonts cannot render ₹ or emoji, so all text is sanitized
+  // to plain characters and prices use "Rs." notation.
   const buildPdf = async () => {
     const { default: jsPDF } = await import('jspdf');
     const { default: autoTable } = await import('jspdf-autotable');
 
+    const clean = (s) => String(s || '').replace(/[^\x20-\x7E]/g, '').replace(/\s+/g, ' ').trim();
+    const money = (n) => `Rs. ${Number(n).toFixed(2)}`;
+
     const now = new Date();
-    const dateStr = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const dd = String(now.getDate()).padStart(2, '0');
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const yyyy = now.getFullYear();
+    const hh = String(now.getHours()).padStart(2, '0');
+    const min = String(now.getMinutes()).padStart(2, '0');
+    const dateStr = `${dd}/${mm}/${yyyy}`;
     const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    const docNo = `PL-${yyyy}${mm}${dd}-${hh}${min}`;
+
+    const businessName = clean(payload?.businessName || vendor?.businessName || 'Price List');
+    const headerLine = clean(payload?.header) || 'Daily Price List';
+    const footerLine = clean(payload?.footer) || 'Thank you for your business.';
+
     const doc = new jsPDF();
     const pageW = doc.internal.pageSize.getWidth();
-    let y = 14;
+    const pageH = doc.internal.pageSize.getHeight();
+    const M = 16; // page margin
 
-    // Header band
-    doc.setFillColor(5, 9, 20);
-    doc.rect(0, 0, pageW, 34, 'F');
-    if (vendor?.settings?.logo) {
-      try { doc.addImage(vendor.settings.logo, 'PNG', 12, 6, 22, 22); } catch (e) { /* logo optional */ }
+    // ── Letterhead ──
+    let y = 18;
+    const hasLogo = !!vendor?.settings?.logo;
+    if (hasLogo) {
+      try { doc.addImage(vendor.settings.logo, 'PNG', M, y - 6, 24, 24); } catch (e) { /* logo optional */ }
     }
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(15);
-    doc.setFont(undefined, 'bold');
-    doc.text(payload?.businessName || vendor?.businessName || 'Price List', vendor?.settings?.logo ? 40 : 14, 15);
+    const textX = hasLogo ? M + 30 : M;
+    doc.setTextColor(17, 24, 39);
+    doc.setFontSize(17);
+    doc.setFont('helvetica', 'bold');
+    doc.text(businessName, textX, y + 2);
     doc.setFontSize(10);
-    doc.setFont(undefined, 'normal');
-    doc.text(payload?.header || 'Daily Price List', vendor?.settings?.logo ? 40 : 14, 22);
-    doc.setFontSize(9);
-    doc.text(`Generated: ${dateStr} at ${timeStr}`, vendor?.settings?.logo ? 40 : 14, 28);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(75, 85, 99);
+    doc.text(headerLine, textX, y + 9);
+    if (vendor?.location || vendor?.address) {
+      doc.setFontSize(9);
+      doc.text(clean(vendor.location || vendor.address), textX, y + 15);
+    }
 
-    y = 42;
+    // Document info block (right-aligned)
+    doc.setFontSize(9);
+    doc.setTextColor(75, 85, 99);
+    const infoX = pageW - M;
+    doc.setFont('helvetica', 'bold');
+    doc.text('DAILY PRICE LIST', infoX, y, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Doc No : ${docNo}`, infoX, y + 6, { align: 'right' });
+    doc.text(`Date : ${dateStr}`, infoX, y + 11, { align: 'right' });
+    doc.text(`Time : ${timeStr}`, infoX, y + 16, { align: 'right' });
+
+    // Rule under the letterhead
+    y += 24;
+    doc.setDrawColor(22, 163, 74);
+    doc.setLineWidth(0.8);
+    doc.line(M, y, pageW - M, y);
+    doc.setDrawColor(234, 88, 12);
+    doc.setLineWidth(0.8);
+    doc.line(M, y + 1.4, pageW - M, y + 1.4);
+
+    // ── Price table ──
+    y += 8;
     autoTable(doc, {
       startY: y,
-      head: [['#', 'Product', 'Price (₹)', 'Unit']],
-      body: (payload?.items || []).map((it, i) => [i + 1, it.name, `₹${it.price}`, it.unit]),
-      theme: 'striped',
-      headStyles: { fillColor: [22, 163, 74], textColor: 255, fontStyle: 'bold' },
-      styles: { fontSize: 10, cellPadding: 3 },
-      alternateRowStyles: { fillColor: [240, 253, 244] },
+      margin: { left: M, right: M },
+      head: [['S.No', 'Product', 'Unit', 'Price']],
+      body: (payload?.items || []).map((it, i) => [i + 1, clean(it.name), clean(it.unit), money(it.price)]),
+      theme: 'grid',
+      headStyles: { fillColor: [22, 101, 52], textColor: 255, fontStyle: 'bold', fontSize: 10, halign: 'left' },
+      styles: { fontSize: 10, cellPadding: { top: 2.5, bottom: 2.5, left: 3, right: 3 }, lineColor: [229, 231, 235], lineWidth: 0.2, textColor: [31, 41, 55] },
+      alternateRowStyles: { fillColor: [247, 254, 249] },
+      columnStyles: {
+        0: { cellWidth: 16, halign: 'center' },
+        2: { cellWidth: 24 },
+        3: { cellWidth: 34, halign: 'right', fontStyle: 'bold' },
+      },
     });
     y = doc.lastAutoTable.finalY + 8;
 
+    // ── Not available section ──
     if (payload?.unavailable?.length) {
-      doc.setFontSize(11);
-      doc.setTextColor(190, 30, 30);
-      doc.setFont(undefined, 'bold');
-      doc.text('Not Available Today', 14, y);
-      y += 2;
-      autoTable(doc, {
-        startY: y + 2,
-        head: [['Product']],
-        body: payload.unavailable.map((it) => [it.name]),
-        theme: 'plain',
-        headStyles: { textColor: [190, 30, 30], fontStyle: 'bold', fontSize: 10 },
-        styles: { fontSize: 10, cellPadding: 2 },
-      });
-      y = doc.lastAutoTable.finalY + 8;
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(153, 27, 27);
+      doc.text('Items Not Available Today', M, y);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(75, 85, 99);
+      const names = payload.unavailable.map((it) => clean(it.name)).join(',  ');
+      const wrapped = doc.splitTextToSize(names, pageW - 2 * M);
+      doc.text(wrapped, M, y + 6);
+      y += 6 + wrapped.length * 5 + 4;
     }
 
+    // ── Closing note ──
     doc.setFontSize(10);
-    doc.setTextColor(60, 60, 60);
-    doc.setFont(undefined, 'normal');
-    doc.text(payload?.footer || 'Thank you.', 14, y + 2);
+    doc.setTextColor(31, 41, 55);
+    doc.text(footerLine, M, y + 4);
 
-    const pageH = doc.internal.pageSize.getHeight();
+    // ── Footer ──
+    doc.setDrawColor(229, 231, 235);
+    doc.setLineWidth(0.3);
+    doc.line(M, pageH - 18, pageW - M, pageH - 18);
     doc.setFontSize(8);
-    doc.setTextColor(130, 130, 130);
-    doc.text('Powered by Eptomart · An Eptosi Group Company', pageW / 2, pageH - 8, { align: 'center' });
+    doc.setTextColor(107, 114, 128);
+    doc.text('This is a system-generated price list and does not require a signature.', M, pageH - 12);
+    doc.text(`Generated on ${dateStr} at ${timeStr}`, M, pageH - 7.5);
+    doc.text('Powered by Eptomart | An Eptosi Group Company', pageW - M, pageH - 12, { align: 'right' });
+    doc.text('Page 1 of 1', pageW - M, pageH - 7.5, { align: 'right' });
 
-    return { doc, filename: `price-list-${now.toISOString().slice(0, 10)}.pdf` };
+    return { doc, filename: `${businessName.replace(/\s+/g, '-')}-price-list-${yyyy}-${mm}-${dd}.pdf` };
   };
 
   const sharePdf = async () => {
