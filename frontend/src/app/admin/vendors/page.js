@@ -22,7 +22,7 @@ export default function VendorsPage() {
   const [form, setForm] = useState(emptyForm());
 
   function emptyForm() {
-    return { username: '', password: '', name: '', email: '', phone: '', businessName: '', category: '', address: '', location: '', whatsappNumber: '', logo: '' };
+    return { username: '', password: '', name: '', email: '', phone: '', businessName: '', category: '', address: '', location: '', whatsappNumber: '', logo: '', shareFormat: 'text' };
   }
 
   const logoFileRef = useRef(null);
@@ -62,6 +62,7 @@ export default function VendorsPage() {
       phone: v.user?.phone || '', businessName: v.businessName, category: v.category?._id || '',
       address: v.address || '', location: v.location || '', whatsappNumber: v.whatsappNumber || '',
       logo: v.settings?.logo || '',
+      shareFormat: v.settings?.shareFormat || 'text',
     });
     setModalOpen(true);
   };
@@ -199,6 +200,13 @@ export default function VendorsPage() {
           <Field label="WhatsApp Number" value={form.whatsappNumber} onChange={(v) => setForm({ ...form, whatsappNumber: v })} />
           <Field label="Address" value={form.address} onChange={(v) => setForm({ ...form, address: v })} />
           <Field label="Location" value={form.location} onChange={(v) => setForm({ ...form, location: v })} />
+          <div>
+            <label className="text-xs text-gray-500 mb-1 block">Price List Share Format</label>
+            <select className="input-field" value={form.shareFormat} onChange={(e) => setForm({ ...form, shareFormat: e.target.value })}>
+              <option value="text">Normal message (text)</option>
+              <option value="pdf">PDF document</option>
+            </select>
+          </div>
         </div>
       </Modal>
 

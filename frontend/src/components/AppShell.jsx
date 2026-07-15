@@ -4,8 +4,9 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard, Users, Package, Tags, ClipboardList, BarChart3,
-  MessageCircle, History, Contact, Menu, Sun, Moon, LogOut, Search,
+  MessageCircle, History, Contact, Menu, Sun, Moon, LogOut, Search, KeyRound, Eye, EyeOff,
 } from 'lucide-react';
+import Modal from '@/components/ui/Modal';
 import { useAuthStore } from '@/store/authStore';
 import { useUiStore } from '@/store/uiStore';
 import api from '@/lib/api';
@@ -36,6 +37,7 @@ export default function AppShell({ role, children }) {
   const { user, vendor, clearAuth } = useAuthStore();
   const { theme, toggleTheme } = useUiStore();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [pwOpen, setPwOpen] = useState(false);
   const nav = role === 'admin' ? ADMIN_NAV : VENDOR_NAV;
 
   const handleLogout = async () => {
@@ -86,6 +88,9 @@ export default function AppShell({ role, children }) {
               <button onClick={toggleTheme} className="btn-secondary px-2 py-2" title="Toggle theme">
                 {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
               </button>
+              <button onClick={() => setPwOpen(true)} className="btn-secondary px-2 py-2" title="Change password">
+                <KeyRound size={18} />
+              </button>
               <div className="flex items-center gap-2.5">
                 <div className="hidden sm:block text-right">
                   <div className="text-sm font-medium">{user?.name}</div>
@@ -113,8 +118,75 @@ export default function AppShell({ role, children }) {
 
           <main className="flex-1 p-4 md:p-6">{children}</main>
         </div>
+
+        <ChangePasswordModal open={pwOpen} onClose={() => setPwOpen(false)} />
       </div>
     </div>
+  );
+}
+
+// Vendors (and admins) can replace their password themselves — e.g. using the
+// temporary password shared by the Eptomart admin after a reset.
+function ChangePasswordModal({ open, onClose }) {
+  const [form, setForm] = useState({ current: '', next: '', confirm: '' });
+  const [show, setShow] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const submit = async () => {
+    if (!form.current || !form.next) return toast.error('Fill in all fields.');
+    if (form.next.length < 6) return toast.error('New password must be at least 6 characters.');
+    if (form.next !== form.confirm) return toast.error('New passwords do not match.');
+    setSaving(true);
+    try {
+      await api.post('/auth/change-password', { currentPassword: form.current, newPassword: form.next });
+      toast.success('Password changed. Use it from your next login.');
+      setForm({ current: '', next: '', confirm: '' });
+      onClose();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to change password.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Change Password"
+      footer={
+        <>
+          <button className="btn-secondary" onClick={onClose}>Cancel</button>
+          <button className="btn-primary" onClick={submit} disabled={saving}>{saving ? 'Saving…' : 'Change Password'}</button>
+        </>
+      }
+    >
+      <div className="space-y-3">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          If your admin shared a temporary password, enter it as your current password and pick a new one.
+        </p>
+        <div>
+          <label className="text-xs text-gray-500 mb-1 block">Current / temporary password</label>
+          <div className="relative">
+            <input type={show ? 'text' : 'password'} className="input-field pr-10" value={form.current}
+              onChange={(e) => setForm({ ...form, current: e.target.value })} />
+            <button type="button" onClick={() => setShow((s) => !s)} className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+              {show ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+        </div>
+        <div>
+          <label className="text-xs text-gray-500 mb-1 block">New password (min 6 characters)</label>
+          <input type={show ? 'text' : 'password'} className="input-field" value={form.next}
+            onChange={(e) => setForm({ ...form, next: e.target.value })} />
+        </div>
+        <div>
+          <label className="text-xs text-gray-500 mb-1 block">Confirm new password</label>
+          <input type={show ? 'text' : 'password'} className="input-field" value={form.confirm}
+            onChange={(e) => setForm({ ...form, confirm: e.target.value })} />
+        </div>
+      </div>
+    </Modal>
   );
 }
 

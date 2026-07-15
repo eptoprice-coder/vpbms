@@ -92,7 +92,11 @@ const updateVendor = asyncHandler(async (req, res) => {
   const vendor = await Vendor.findById(req.params.id);
   if (!vendor) return res.status(404).json({ success: false, message: 'Vendor not found.' });
 
-  const { name, email, phone, businessName, category, address, location, whatsappNumber, logo } = req.body;
+  const { name, email, phone, businessName, category, address, location, whatsappNumber, logo, shareFormat } = req.body;
+
+  if (shareFormat !== undefined && ['text', 'pdf'].includes(shareFormat)) {
+    vendor.settings.shareFormat = shareFormat;
+  }
 
   if (businessName) vendor.businessName = businessName;
   if (category) vendor.category = category;

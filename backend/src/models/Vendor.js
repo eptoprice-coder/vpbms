@@ -15,6 +15,8 @@ const vendorSchema = new mongoose.Schema(
       messageFooter: { type: String, default: 'Thank you.' },
       messageHeader: { type: String, default: '🌿 Fresh Market Price List' },
       logo: { type: String, default: '' }, // vendor's own logo as a compact data URL
+      // Admin-controlled: whether the vendor's price list is shared as a text message or a PDF.
+      shareFormat: { type: String, enum: ['text', 'pdf'], default: 'text' },
     },
   },
   { timestamps: true }

@@ -82,6 +82,37 @@ const getMe = asyncHandler(async (req, res) => {
   res.json({ success: true, user: req.user.toSafeObject(), vendor });
 });
 
+// POST /api/auth/change-password
+// Lets any signed-in user (vendors included) replace their password — e.g. after
+// logging in with a temp password shared by the Eptomart admin.
+const changePassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ success: false, message: 'Current and new password are required.' });
+  }
+  if (String(newPassword).length < 6) {
+    return res.status(400).json({ success: false, message: 'New password must be at least 6 characters.' });
+  }
+
+  const user = await User.findById(req.user._id).select('+password');
+  const isMatch = await user.comparePassword(currentPassword);
+  if (!isMatch) return res.status(401).json({ success: false, message: 'Current password is incorrect.' });
+
+  user.password = newPassword;
+  user.passwordResetRequired = false;
+  await user.save();
+
+  await logActivity({
+    user: user._id,
+    vendor: req.vendor?._id,
+    action: 'PASSWORD_CHANGED',
+    description: `${user.role} "${user.username}" changed their password`,
+    ip: req.ip,
+  });
+
+  res.json({ success: true, message: 'Password changed successfully.' });
+});
+
 // POST /api/auth/logout
 const logout = asyncHandler(async (req, res) => {
   await logActivity({
@@ -94,4 +125,4 @@ const logout = asyncHandler(async (req, res) => {
   res.json({ success: true, message: 'Logged out.' });
 });
 
-module.exports = { login, forgotPassword, getMe, logout };
+module.exports = { login, forgotPassword, getMe, logout, changePassword };

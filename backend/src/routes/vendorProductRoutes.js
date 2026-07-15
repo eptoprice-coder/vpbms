@@ -8,6 +8,7 @@ router.use(protect, authorize('vendor'));
 router.get('/', ctrl.listVendorProducts);
 router.post('/', ctrl.addVendorProduct);
 router.put('/bulk-update', ctrl.bulkUpdatePrices);
+router.patch('/:id/availability', ctrl.toggleAvailability);
 router.get('/history', ctrl.priceHistory);
 router.get('/history/export', ctrl.exportPriceHistory);
 

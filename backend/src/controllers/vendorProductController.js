@@ -56,6 +56,15 @@ const addVendorProduct = asyncHandler(async (req, res) => {
   const vendor = req.vendor;
   const categoryId = vendor.category._id || vendor.category;
 
+  // Product names must be unique within the category (case-insensitive).
+  const duplicate = await Product.findOne({
+    category: categoryId,
+    name: new RegExp(`^${String(name).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'),
+  });
+  if (duplicate) {
+    return res.status(409).json({ success: false, message: `"${duplicate.name}" already exists. Product names must be unique.` });
+  }
+
   const product = await Product.create({
     name,
     tamilName,
@@ -151,6 +160,27 @@ const bulkUpdatePrices = asyncHandler(async (req, res) => {
   res.json({ success: true, updated: results.length, data: results });
 });
 
+// PATCH /api/vendor/products/:id/availability
+// Marks a product available (active) or unavailable (inactive — out of stock / discontinued).
+const toggleAvailability = asyncHandler(async (req, res) => {
+  const vp = await VendorProduct.findOne({ _id: req.params.id, vendor: req.vendor._id }).populate('product', 'name');
+  if (!vp) return res.status(404).json({ success: false, message: 'Product not found.' });
+
+  vp.status = vp.status === 'active' ? 'inactive' : 'active';
+  vp.lastUpdated = new Date();
+  await vp.save();
+
+  await logActivity({
+    user: req.user._id,
+    vendor: req.vendor._id,
+    action: 'PRODUCT_UPDATED',
+    description: `Marked "${vp.product?.name}" as ${vp.status === 'active' ? 'available' : 'unavailable'}`,
+    ip: req.ip,
+  });
+
+  res.json({ success: true, data: { _id: vp._id, status: vp.status } });
+});
+
 // GET /api/vendor/products/history
 const priceHistory = asyncHandler(async (req, res) => {
   const { from, to, product, page = 1, limit = 50 } = req.query;
@@ -204,4 +234,4 @@ const exportPriceHistory = asyncHandler(async (req, res) => {
   return exportToPDF(res, { title: 'Price Update History', columns, rows });
 });
 
-module.exports = { listVendorProducts, addVendorProduct, bulkUpdatePrices, priceHistory, exportPriceHistory };
+module.exports = { listVendorProducts, addVendorProduct, bulkUpdatePrices, toggleAvailability, priceHistory, exportPriceHistory };

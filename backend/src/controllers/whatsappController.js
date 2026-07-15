@@ -6,11 +6,20 @@ const logActivity = require('../middleware/activityLogger');
 const { buildPriceListMessage, buildWaLink } = require('../utils/whatsapp');
 
 // POST /api/vendor/whatsapp/prepare
-// Builds the formatted price-list message from today's active vendor products.
+// Body (optional): { includeIds: [vendorProductId] } — items the vendor kept selected.
+// Builds the formatted price-list message from the selected active products, and
+// automatically lists unavailable (out of stock / discontinued) products.
 const prepareMessage = asyncHandler(async (req, res) => {
   const vendor = req.vendor;
-  const vendorProducts = await VendorProduct.find({ vendor: vendor._id, status: 'active', currentPrice: { $gt: 0 } })
-    .populate('product', 'name unit');
+  const { includeIds } = req.body || {};
+
+  const activeFilter = { vendor: vendor._id, status: 'active', currentPrice: { $gt: 0 } };
+  if (Array.isArray(includeIds) && includeIds.length) activeFilter._id = { $in: includeIds };
+
+  const [vendorProducts, unavailableProducts] = await Promise.all([
+    VendorProduct.find(activeFilter).populate('product', 'name unit'),
+    VendorProduct.find({ vendor: vendor._id, status: 'inactive' }).populate('product', 'name unit'),
+  ]);
 
   if (!vendorProducts.length) {
     return res.status(400).json({ success: false, message: 'No priced products available. Update prices first.' });
@@ -19,14 +28,29 @@ const prepareMessage = asyncHandler(async (req, res) => {
   const items = vendorProducts
     .filter((vp) => vp.product)
     .map((vp) => ({ name: vp.product.name, price: vp.currentPrice, unit: vp.product.unit }));
+  const unavailable = unavailableProducts
+    .filter((vp) => vp.product)
+    .map((vp) => ({ name: vp.product.name, unit: vp.product.unit }));
 
   const message = buildPriceListMessage({
     header: vendor.settings?.messageHeader,
     footer: vendor.settings?.messageFooter,
     items,
+    unavailable,
   });
 
-  res.json({ success: true, message, itemCount: items.length });
+  res.json({
+    success: true,
+    message,
+    itemCount: items.length,
+    // structured payload so the client can also render a PDF price list
+    items,
+    unavailable,
+    header: vendor.settings?.messageHeader || '🌿 Fresh Market Price List',
+    footer: vendor.settings?.messageFooter || 'Thank you.',
+    businessName: vendor.businessName,
+    shareFormat: vendor.settings?.shareFormat || 'text',
+  });
 });
 
 // POST /api/vendor/whatsapp/send

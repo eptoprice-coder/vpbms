@@ -9,7 +9,7 @@ const formatDate = (date = new Date()) => {
   return `${dd}/${mm}/${yyyy}`;
 };
 
-const buildPriceListMessage = ({ header, items, footer, date = new Date() }) => {
+const buildPriceListMessage = ({ header, items, unavailable = [], footer, date = new Date() }) => {
   const lines = [];
   lines.push(header || '🌿 Fresh Market Price List');
   lines.push(`Date : ${formatDate(date)}`);
@@ -17,6 +17,11 @@ const buildPriceListMessage = ({ header, items, footer, date = new Date() }) => 
   items.forEach((item) => {
     lines.push(`${item.name} - ₹${item.price}/${item.unit}`);
   });
+  if (unavailable.length) {
+    lines.push('');
+    lines.push('❌ Not Available Today:');
+    unavailable.forEach((item) => lines.push(item.name));
+  }
   lines.push('');
   lines.push(footer || 'Thank you.');
   return lines.join('\n');
