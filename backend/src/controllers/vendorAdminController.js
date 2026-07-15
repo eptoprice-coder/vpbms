@@ -76,6 +76,16 @@ const createVendor = asyncHandler(async (req, res) => {
       : {}),
   });
 
+  // Every new vendor starts with the official EPTOMART contact.
+  await Customer.create({
+    vendor: vendor._id,
+    name: 'EPTOMART',
+    mobile: '+919514519518',
+    group: 'Other',
+    remarks: 'Official Eptomart contact',
+    status: 'active',
+  });
+
   await logActivity({
     user: req.user._id,
     action: 'VENDOR_CREATED',

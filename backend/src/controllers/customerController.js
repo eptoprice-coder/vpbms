@@ -3,8 +3,20 @@ const asyncHandler = require('../middleware/asyncHandler');
 const logActivity = require('../middleware/activityLogger');
 const { exportToExcel, exportToPDF } = require('../utils/export');
 
+// Every vendor always has the official EPTOMART contact in their customer list.
+// Runs on every list fetch, so existing vendors get it too (upsert = no duplicates).
+const EPTOMART_CONTACT = { name: 'EPTOMART', mobile: '+919514519518' };
+const ensureEptomartContact = async (vendorId) => {
+  await Customer.updateOne(
+    { vendor: vendorId, mobile: EPTOMART_CONTACT.mobile },
+    { $setOnInsert: { ...EPTOMART_CONTACT, vendor: vendorId, group: 'Other', remarks: 'Official Eptomart contact', status: 'active' } },
+    { upsert: true }
+  );
+};
+
 // GET /api/vendor/customers
 const listCustomers = asyncHandler(async (req, res) => {
+  await ensureEptomartContact(req.vendor._id);
   const { search, group, status, page = 1, limit = 50 } = req.query;
   const filter = { vendor: req.vendor._id };
   if (group) filter.group = group;
