@@ -59,7 +59,10 @@ export default function LoginPage() {
   return (
     // "dark" wrapper forces dark-theme styles here regardless of the user's saved theme —
     // this page is always rendered on the navy background.
-    <div className="dark relative min-h-screen flex flex-col items-center justify-center bg-navy-950 p-4 overflow-hidden">
+    <div
+      className="dark relative min-h-screen flex flex-col items-center justify-center bg-navy-950 p-4 overflow-hidden"
+      style={{ paddingTop: 'calc(1rem + env(safe-area-inset-top, 0px))', paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))' }}
+    >
       {/* ambient background */}
       <div className="absolute inset-0" aria-hidden="true">
         <div className="aurora-blob aurora-1 w-[34rem] h-[34rem] -top-40 -left-32" />

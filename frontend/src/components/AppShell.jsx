@@ -67,14 +67,18 @@ export default function AppShell({ role, children }) {
         {mobileOpen && (
           <div className="fixed inset-0 z-40 md:hidden">
             <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
-            <aside className="absolute left-0 top-0 h-full w-64 bg-white dark:bg-navy-900 shadow-xl">
+            <aside className="absolute left-0 top-0 h-full w-64 bg-white dark:bg-navy-900 shadow-xl" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
               <SidebarContent nav={nav} pathname={pathname} vendor={role !== 'admin' ? vendor : null} onNavigate={() => setMobileOpen(false)} />
             </aside>
           </div>
         )}
 
         <div className="relative flex-1 flex flex-col min-w-0">
-          <header className="h-20 flex items-center justify-between px-4 md:px-6 border-b border-gray-100 dark:border-gray-800 bg-white/70 dark:bg-navy-900/70 backdrop-blur-xl sticky top-0 z-30">
+          {/* pt uses the device safe-area so content never sits under the phone's status bar (PWA) */}
+          <header
+            className="min-h-20 flex items-center justify-between px-4 md:px-6 border-b border-gray-100 dark:border-gray-800 bg-white/70 dark:bg-navy-900/70 backdrop-blur-xl sticky top-0 z-30"
+            style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+          >
             <div className="flex items-center gap-3">
               <button className="md:hidden text-gray-500" onClick={() => setMobileOpen(true)}>
                 <Menu size={22} />
@@ -116,7 +120,7 @@ export default function AppShell({ role, children }) {
             </div>
           </header>
 
-          <main className="flex-1 p-4 md:p-6">{children}</main>
+          <main className="flex-1 p-4 md:p-6" style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))' }}>{children}</main>
         </div>
 
         <ChangePasswordModal open={pwOpen} onClose={() => setPwOpen(false)} />
