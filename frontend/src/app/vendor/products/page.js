@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import AppShell from '@/components/AppShell';
 import DataTable from '@/components/ui/DataTable';
 import Modal from '@/components/ui/Modal';
+import UnitSelect from '@/components/ui/UnitSelect';
 import { useRequireAuth } from '@/hooks/useAuth';
 import api from '@/lib/api';
 
@@ -188,7 +189,7 @@ export default function VendorProductsPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs text-gray-500 mb-1 block">Unit</label>
-              <input className="input-field" value={addForm.unit} onChange={(e) => setAddForm({ ...addForm, unit: e.target.value })} placeholder="kg" />
+              <UnitSelect value={addForm.unit} onChange={(unit) => setAddForm({ ...addForm, unit })} />
             </div>
             <div>
               <label className="text-xs text-gray-500 mb-1 block">Starting Price (₹, optional)</label>

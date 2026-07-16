@@ -6,6 +6,7 @@ import AppShell from '@/components/AppShell';
 import DataTable from '@/components/ui/DataTable';
 import Modal from '@/components/ui/Modal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import UnitSelect from '@/components/ui/UnitSelect';
 import { useRequireAuth } from '@/hooks/useAuth';
 import api from '@/lib/api';
 
@@ -107,7 +108,7 @@ export default function ProductMasterPage() {
               {categories.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
             </select>
           </div>
-          <div><label className="text-xs text-gray-500 mb-1 block">Unit</label><input className="input-field" value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} /></div>
+          <div><label className="text-xs text-gray-500 mb-1 block">Unit</label><UnitSelect value={form.unit} onChange={(unit) => setForm({ ...form, unit })} /></div>
           <div><label className="text-xs text-gray-500 mb-1 block">Default Quantity</label><input type="number" className="input-field" value={form.defaultQuantity} onChange={(e) => setForm({ ...form, defaultQuantity: e.target.value })} /></div>
           <div>
             <label className="text-xs text-gray-500 mb-1 block">Status</label>
