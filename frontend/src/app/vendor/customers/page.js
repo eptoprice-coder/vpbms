@@ -8,7 +8,7 @@ import DataTable from '@/components/ui/DataTable';
 import Modal from '@/components/ui/Modal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { useRequireAuth } from '@/hooks/useAuth';
-import api from '@/lib/api';
+import api, { downloadFile, exportExt } from '@/lib/api';
 
 const GROUPS = ['Hotels', 'Retail Shops', 'Wholesalers', 'Restaurants', 'Street Vendors', 'Supermarkets', 'Other'];
 
@@ -85,7 +85,8 @@ export default function CustomersPage() {
     e.target.value = '';
   };
 
-  const exportFile = (format) => window.open(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/vendor/customers/export?format=${format}`, '_blank');
+  const exportFile = (format) =>
+    downloadFile(`/vendor/customers/export?format=${format}`, `customers.${exportExt(format)}`).catch(() => {});
 
   const selectedCount = Object.values(selected).filter(Boolean).length;
 

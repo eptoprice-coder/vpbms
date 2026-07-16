@@ -26,4 +26,17 @@ api.interceptors.response.use(
   }
 );
 
+// Downloads a file from an authenticated endpoint. window.open() can't send the
+// Authorization header, so exports must go through axios as a blob.
+export const downloadFile = async (path, filename) => {
+  const res = await api.get(path, { responseType: 'blob' });
+  // Prefer the server-suggested filename if provided
+  const dispo = res.headers['content-disposition'];
+  const match = dispo && /filename="?([^";]+)"?/.exec(dispo);
+  const { saveAs } = await import('file-saver');
+  saveAs(res.data, (match && match[1]) || filename);
+};
+
+export const exportExt = (format) => (format === 'excel' ? 'xlsx' : 'pdf');
+
 export default api;

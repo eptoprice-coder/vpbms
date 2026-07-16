@@ -5,7 +5,7 @@ import AppShell from '@/components/AppShell';
 import DataTable from '@/components/ui/DataTable';
 import PriceTrendChart from '@/components/ui/PriceTrendChart';
 import { useRequireAuth } from '@/hooks/useAuth';
-import api from '@/lib/api';
+import api, { downloadFile, exportExt } from '@/lib/api';
 
 export default function HistoryPage() {
   const { ready } = useRequireAuth('vendor');
@@ -20,7 +20,8 @@ export default function HistoryPage() {
     api.get('/vendor/whatsapp/history').then((r) => setMessageHistory(r.data.data));
   }, [ready]);
 
-  const exportPriceFile = (format) => window.open(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/vendor/products/history/export?format=${format}`, '_blank');
+  const exportPriceFile = (format) =>
+    downloadFile(`/vendor/products/history/export?format=${format}`, `price-history.${exportExt(format)}`).catch(() => {});
 
   // Unique products present in the history, for the trend selector.
   const products = useMemo(() => {

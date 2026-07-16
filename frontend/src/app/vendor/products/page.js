@@ -7,7 +7,7 @@ import DataTable from '@/components/ui/DataTable';
 import Modal from '@/components/ui/Modal';
 import UnitSelect from '@/components/ui/UnitSelect';
 import { useRequireAuth } from '@/hooks/useAuth';
-import api from '@/lib/api';
+import api, { downloadFile, exportExt } from '@/lib/api';
 
 // Isolated so typing a price only re-renders this single cell, not the whole
 // table's column definitions — keeping columns stable is what keeps the input focused.
@@ -121,7 +121,9 @@ export default function VendorProductsPage() {
     }
   };
 
-  const exportFile = (format) => window.open(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/vendor/products/history/export?format=${format}`, '_blank');
+  const exportFile = (format) =>
+    downloadFile(`/vendor/products/history/export?format=${format}`, `price-history.${exportExt(format)}`)
+      .catch(() => toast.error('Download failed. Please try again.'));
 
   const onAvailabilityToggled = useCallback((id, status) => {
     setProducts((ps) => ps.map((p) => (p._id === id ? { ...p, status } : p)));

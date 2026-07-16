@@ -5,7 +5,7 @@ import AppShell from '@/components/AppShell';
 import StatCard from '@/components/ui/StatCard';
 import { TrendingUp, Send, UserPlus, Clock } from 'lucide-react';
 import { useRequireAuth } from '@/hooks/useAuth';
-import api from '@/lib/api';
+import api, { downloadFile, exportExt } from '@/lib/api';
 
 const RANGES = [
   { key: 'today', label: 'Today' },
@@ -30,7 +30,7 @@ export default function VendorReportsPage() {
 
   const exportFile = (format) => {
     const params = new URLSearchParams({ format, ...(range === 'custom' ? custom : { range }) });
-    window.open(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/vendor/reports/export?${params.toString()}`, '_blank');
+    downloadFile(`/vendor/reports/export?${params.toString()}`, `report.${exportExt(format)}`).catch(() => {});
   };
 
   if (!ready) return null;

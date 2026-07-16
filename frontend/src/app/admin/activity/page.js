@@ -4,7 +4,7 @@ import { Download } from 'lucide-react';
 import AppShell from '@/components/AppShell';
 import DataTable from '@/components/ui/DataTable';
 import { useRequireAuth } from '@/hooks/useAuth';
-import api from '@/lib/api';
+import api, { downloadFile, exportExt } from '@/lib/api';
 
 const ACTIONS = [
   'LOGIN', 'LOGOUT', 'PRICE_UPDATED', 'CUSTOMER_ADDED', 'CUSTOMER_UPDATED', 'CUSTOMER_DELETED',
@@ -21,7 +21,7 @@ export default function ActivityPage() {
   useEffect(() => { if (ready) load(); }, [ready, action]); // eslint-disable-line
 
   const exportFile = (format) => {
-    window.open(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/admin/activity/export?format=${format}`, '_blank');
+    downloadFile(`/admin/activity/export?format=${format}`, `activity-log.${exportExt(format)}`).catch(() => {});
   };
 
   const columns = useMemo(() => [
