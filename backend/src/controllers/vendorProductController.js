@@ -108,6 +108,37 @@ const addVendorProduct = asyncHandler(async (req, res) => {
   });
 });
 
+// PATCH /api/vendor/products/:id/availability - toggle a product active/inactive on this vendor's price sheet.
+// Inactive products are excluded from the WhatsApp price list but stay in the vendor's own sheet for later re-activation.
+const toggleAvailability = asyncHandler(async (req, res) => {
+  const vp = await VendorProduct.findOne({ _id: req.params.id, vendor: req.vendor._id });
+  if (!vp) return res.status(404).json({ success: false, message: 'Product not found on your price sheet.' });
+
+  vp.status = vp.status === 'active' ? 'inactive' : 'active';
+  await vp.save();
+
+  await logActivity({
+    user: req.user._id,
+    vendor: req.vendor._id,
+    action: 'PRODUCT_UPDATED',
+    description: `Set product availability to "${vp.status}"`,
+    ip: req.ip,
+  });
+
+  const populated = await VendorProduct.findById(vp._id).populate('product');
+  res.json({
+    success: true,
+    data: {
+      _id: populated._id,
+      product: populated.product,
+      quantityAvailable: populated.quantityAvailable,
+      currentPrice: populated.currentPrice,
+      status: populated.status,
+      lastUpdated: populated.lastUpdated,
+    },
+  });
+});
+
 // PUT /api/vendor/products/bulk-update - apply new prices, write PriceHistory (never overwritten)
 const bulkUpdatePrices = asyncHandler(async (req, res) => {
   const { updates } = req.body; // [{ vendorProductId, newPrice, quantityAvailable }]
@@ -213,4 +244,4 @@ const exportPriceHistory = asyncHandler(async (req, res) => {
   return exportToPDF(res, { title: 'Price Update History', columns, rows });
 });
 
-module.exports = { listVendorProducts, addVendorProduct, bulkUpdatePrices, priceHistory, exportPriceHistory };
+module.exports = { listVendorProducts, addVendorProduct, toggleAvailability, bulkUpdatePrices, priceHistory, exportPriceHistory };
