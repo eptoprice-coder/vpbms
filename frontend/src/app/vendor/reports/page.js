@@ -5,8 +5,14 @@ import AppShell from '@/components/AppShell';
 import StatCard from '@/components/ui/StatCard';
 import { TrendingUp, Send, UserPlus, Clock } from 'lucide-react';
 import { useRequireAuth } from '@/hooks/useAuth';
+import { useAuthStore } from '@/store/authStore';
 import toast from 'react-hot-toast';
 import api, { downloadFile, exportExt } from '@/lib/api';
+
+const toDateInput = (d) => {
+  const x = new Date(d);
+  return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
+};
 
 const RANGES = [
   { key: 'today', label: 'Today' },
@@ -17,9 +23,42 @@ const RANGES = [
 
 export default function VendorReportsPage() {
   const { ready } = useRequireAuth('vendor');
+  const { vendor } = useAuthStore();
   const [range, setRange] = useState('today');
   const [custom, setCustom] = useState({ from: '', to: '' });
   const [data, setData] = useState(null);
+
+  // Custom dates are only meaningful between profile creation and today.
+  const minDate = vendor?.createdAt ? toDateInput(vendor.createdAt) : undefined;
+  const maxDate = toDateInput(new Date());
+
+  // Clamp a picked date into [minDate, maxDate] — covers browsers/typed input
+  // that ignore the min/max attributes.
+  const clampDate = (v) => {
+    if (!v) return v;
+    if (minDate && v < minDate) {
+      toast.error(`Reports start from your profile creation date (${new Date(vendor.createdAt).toLocaleDateString('en-IN')}).`);
+      return minDate;
+    }
+    if (v > maxDate) {
+      toast.error('Future dates cannot be selected.');
+      return maxDate;
+    }
+    return v;
+  };
+
+  const setCustomDate = (key, value) => {
+    const v = clampDate(value);
+    setCustom((c) => {
+      const next = { ...c, [key]: v };
+      // keep from ≤ to
+      if (next.from && next.to && next.from > next.to) {
+        if (key === 'from') next.to = next.from; else next.from = next.to;
+      }
+      return next;
+    });
+    setRange('custom');
+  };
 
   const load = async () => {
     const params = range === 'custom' ? { from: custom.from, to: custom.to } : { range };
@@ -27,7 +66,7 @@ export default function VendorReportsPage() {
     setData(res.data);
   };
 
-  useEffect(() => { if (ready) load(); }, [ready, range]); // eslint-disable-line
+  useEffect(() => { if (ready) load(); }, [ready, range, custom.from, custom.to]); // eslint-disable-line
 
   const exportFile = (format) => {
     const params = new URLSearchParams({ format, ...(range === 'custom' ? custom : { range }) });
@@ -51,8 +90,10 @@ export default function VendorReportsPage() {
         {RANGES.map((r) => (
           <button key={r.key} onClick={() => setRange(r.key)} className={`btn-secondary ${range === r.key ? 'ring-2 ring-brand-500' : ''}`}>{r.label}</button>
         ))}
-        <input type="date" className="input-field w-auto" value={custom.from} onChange={(e) => { setCustom({ ...custom, from: e.target.value }); setRange('custom'); }} />
-        <input type="date" className="input-field w-auto" value={custom.to} onChange={(e) => { setCustom({ ...custom, to: e.target.value }); setRange('custom'); }} />
+        <input type="date" className="input-field w-auto" value={custom.from} min={minDate} max={custom.to || maxDate}
+          onChange={(e) => setCustomDate('from', e.target.value)} />
+        <input type="date" className="input-field w-auto" value={custom.to} min={custom.from || minDate} max={maxDate}
+          onChange={(e) => setCustomDate('to', e.target.value)} />
       </div>
 
       {data && (

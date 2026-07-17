@@ -30,10 +30,21 @@ const dateRangeFilter = (range, from, to) => {
   return { $gte: start, $lte: end };
 };
 
+// Server-side guard: report ranges can never reach before the vendor's profile
+// creation date or into the future, whatever the client sends.
+const clampToVendorLifetime = (filter, vendor) => {
+  const now = new Date();
+  const born = vendor?.createdAt ? new Date(vendor.createdAt) : new Date(0);
+  return {
+    $gte: filter.$gte < born ? born : filter.$gte,
+    $lte: filter.$lte > now ? now : filter.$lte,
+  };
+};
+
 // GET /api/vendor/reports?range=today|yesterday|week|month&from=&to=
 const vendorReport = asyncHandler(async (req, res) => {
   const { range, from, to } = req.query;
-  const createdAt = dateRangeFilter(range, from, to);
+  const createdAt = clampToVendorLifetime(dateRangeFilter(range, from, to), req.vendor);
   const vendorId = req.vendor._id;
 
   const [priceUpdates, messagesSent, customersAdded, activity] = await Promise.all([
@@ -58,7 +69,7 @@ const vendorReport = asyncHandler(async (req, res) => {
 // GET /api/vendor/reports/export?format=pdf|excel&range=
 const exportVendorReport = asyncHandler(async (req, res) => {
   const { range, from, to } = req.query;
-  const createdAt = dateRangeFilter(range, from, to);
+  const createdAt = clampToVendorLifetime(dateRangeFilter(range, from, to), req.vendor);
   const logs = await ActivityLog.find({ vendor: req.vendor._id, createdAt }).sort({ createdAt: -1 }).limit(2000);
 
   const columns = [
