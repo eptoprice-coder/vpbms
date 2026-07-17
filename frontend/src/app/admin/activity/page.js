@@ -4,6 +4,7 @@ import { Download } from 'lucide-react';
 import AppShell from '@/components/AppShell';
 import DataTable from '@/components/ui/DataTable';
 import { useRequireAuth } from '@/hooks/useAuth';
+import toast from 'react-hot-toast';
 import api, { downloadFile, exportExt } from '@/lib/api';
 
 const ACTIONS = [
@@ -21,7 +22,8 @@ export default function ActivityPage() {
   useEffect(() => { if (ready) load(); }, [ready, action]); // eslint-disable-line
 
   const exportFile = (format) => {
-    downloadFile(`/admin/activity/export?format=${format}`, `activity-log.${exportExt(format)}`).catch(() => {});
+    downloadFile(`/admin/activity/export?format=${format}`, `activity-log.${exportExt(format)}`)
+      .catch((e) => toast.error(e.message || 'Download failed.'));
   };
 
   const columns = useMemo(() => [

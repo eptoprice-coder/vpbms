@@ -86,7 +86,8 @@ export default function CustomersPage() {
   };
 
   const exportFile = (format) =>
-    downloadFile(`/vendor/customers/export?format=${format}`, `customers.${exportExt(format)}`).catch(() => {});
+    downloadFile(`/vendor/customers/export?format=${format}`, `customers.${exportExt(format)}`)
+      .catch((e) => toast.error(e.message || 'Download failed.'));
 
   const selectedCount = Object.values(selected).filter(Boolean).length;
 

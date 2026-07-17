@@ -5,6 +5,7 @@ import AppShell from '@/components/AppShell';
 import StatCard from '@/components/ui/StatCard';
 import { TrendingUp, Send, UserPlus, Clock } from 'lucide-react';
 import { useRequireAuth } from '@/hooks/useAuth';
+import toast from 'react-hot-toast';
 import api, { downloadFile, exportExt } from '@/lib/api';
 
 const RANGES = [
@@ -30,7 +31,8 @@ export default function VendorReportsPage() {
 
   const exportFile = (format) => {
     const params = new URLSearchParams({ format, ...(range === 'custom' ? custom : { range }) });
-    downloadFile(`/vendor/reports/export?${params.toString()}`, `report.${exportExt(format)}`).catch(() => {});
+    downloadFile(`/vendor/reports/export?${params.toString()}`, `report.${exportExt(format)}`)
+      .catch((e) => toast.error(e.message || 'Download failed.'));
   };
 
   if (!ready) return null;

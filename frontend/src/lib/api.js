@@ -27,14 +27,45 @@ api.interceptors.response.use(
 );
 
 // Downloads a file from an authenticated endpoint. window.open() can't send the
-// Authorization header, so exports must go through axios as a blob.
+// Authorization header, so exports go through axios as a blob.
+// Installed PWAs on phones (especially iPhone) cannot use normal browser downloads,
+// so on devices that support it we hand the file to the system share sheet instead
+// (user can pick "Save to Files", WhatsApp, etc.). Desktop falls back to a real download.
 export const downloadFile = async (path, filename) => {
-  const res = await api.get(path, { responseType: 'blob' });
-  // Prefer the server-suggested filename if provided
+  let res;
+  try {
+    res = await api.get(path, { responseType: 'blob' });
+  } catch (err) {
+    // Server sent a JSON error as a blob — surface the real message.
+    let msg = 'Download failed. Please try again.';
+    try {
+      const text = await err.response?.data?.text?.();
+      if (text) msg = JSON.parse(text).message || msg;
+    } catch (_) { /* keep generic */ }
+    const e = new Error(msg);
+    e.original = err;
+    throw e;
+  }
+
   const dispo = res.headers['content-disposition'];
   const match = dispo && /filename="?([^";]+)"?/.exec(dispo);
+  const name = (match && match[1]) || filename;
+  const blob = res.data;
+
+  // Phone / PWA path: share sheet handles files where downloads can't.
+  try {
+    const file = new File([blob], name, { type: blob.type || 'application/octet-stream' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: name });
+      return;
+    }
+  } catch (e) {
+    if (e?.name === 'AbortError') return; // user closed the share sheet — not an error
+    // fall through to classic download
+  }
+
   const { saveAs } = await import('file-saver');
-  saveAs(res.data, (match && match[1]) || filename);
+  saveAs(blob, name);
 };
 
 export const exportExt = (format) => (format === 'excel' ? 'xlsx' : 'pdf');

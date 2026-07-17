@@ -123,7 +123,7 @@ export default function VendorProductsPage() {
 
   const exportFile = (format) =>
     downloadFile(`/vendor/products/history/export?format=${format}`, `price-history.${exportExt(format)}`)
-      .catch(() => toast.error('Download failed. Please try again.'));
+      .catch((e) => toast.error(e.message || 'Download failed.'));
 
   const onAvailabilityToggled = useCallback((id, status) => {
     setProducts((ps) => ps.map((p) => (p._id === id ? { ...p, status } : p)));

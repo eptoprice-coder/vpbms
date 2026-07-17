@@ -5,6 +5,7 @@ import AppShell from '@/components/AppShell';
 import DataTable from '@/components/ui/DataTable';
 import PriceTrendChart from '@/components/ui/PriceTrendChart';
 import { useRequireAuth } from '@/hooks/useAuth';
+import toast from 'react-hot-toast';
 import api, { downloadFile, exportExt } from '@/lib/api';
 
 export default function HistoryPage() {
@@ -21,7 +22,8 @@ export default function HistoryPage() {
   }, [ready]);
 
   const exportPriceFile = (format) =>
-    downloadFile(`/vendor/products/history/export?format=${format}`, `price-history.${exportExt(format)}`).catch(() => {});
+    downloadFile(`/vendor/products/history/export?format=${format}`, `price-history.${exportExt(format)}`)
+      .catch((e) => toast.error(e.message || 'Download failed.'));
 
   // Unique products present in the history, for the trend selector.
   const products = useMemo(() => {
