@@ -43,6 +43,24 @@ const listVendors = asyncHandler(async (req, res) => {
   res.json({ success: true, data: withCounts, total, page: Number(page), limit: Number(limit) });
 });
 
+// One contact number = one vendor profile per category. The same number may run
+// vendor profiles in DIFFERENT categories (e.g. Fruits and Vegetables), but not
+// two profiles in the same category. Compares the last 10 digits so +91 prefixes
+// and formatting don't fool the check.
+const last10 = (v) => String(v || '').replace(/\D/g, '').slice(-10);
+const findDuplicateContact = async ({ categoryId, phone, whatsappNumber, excludeVendorId }) => {
+  const numbers = [last10(phone), last10(whatsappNumber)].filter((n) => n.length === 10);
+  if (!numbers.length) return null;
+  const vendors = await Vendor.find({
+    category: categoryId,
+    ...(excludeVendorId ? { _id: { $ne: excludeVendorId } } : {}),
+  }).populate('user', 'phone');
+  return vendors.find((v) => {
+    const theirs = [last10(v.whatsappNumber), last10(v.user?.phone)].filter((n) => n.length === 10);
+    return theirs.some((n) => numbers.includes(n));
+  }) || null;
+};
+
 // POST /api/admin/vendors
 const createVendor = asyncHandler(async (req, res) => {
   const { username, password, name, email, phone, businessName, category, address, location, whatsappNumber, logo } = req.body;
@@ -53,6 +71,14 @@ const createVendor = asyncHandler(async (req, res) => {
 
   const existing = await User.findOne({ username: username.toLowerCase() });
   if (existing) return res.status(409).json({ success: false, message: 'Username already taken.' });
+
+  const dup = await findDuplicateContact({ categoryId: category, phone, whatsappNumber });
+  if (dup) {
+    return res.status(409).json({
+      success: false,
+      message: `This contact number is already used by "${dup.businessName}" in the same category. The same number can only be reused in a different category.`,
+    });
+  }
 
   const user = await User.create({
     username: username.toLowerCase(),
@@ -103,6 +129,20 @@ const updateVendor = asyncHandler(async (req, res) => {
   if (!vendor) return res.status(404).json({ success: false, message: 'Vendor not found.' });
 
   const { name, email, phone, businessName, category, address, location, whatsappNumber, logo, shareFormat } = req.body;
+
+  // Re-check contact uniqueness when number or category changes
+  const dup = await findDuplicateContact({
+    categoryId: category || vendor.category,
+    phone,
+    whatsappNumber: whatsappNumber !== undefined ? whatsappNumber : vendor.whatsappNumber,
+    excludeVendorId: vendor._id,
+  });
+  if (dup) {
+    return res.status(409).json({
+      success: false,
+      message: `This contact number is already used by "${dup.businessName}" in the same category. The same number can only be reused in a different category.`,
+    });
+  }
 
   if (shareFormat !== undefined && ['text', 'pdf'].includes(shareFormat)) {
     vendor.settings.shareFormat = shareFormat;
