@@ -7,7 +7,8 @@ import DataTable from '@/components/ui/DataTable';
 import Modal from '@/components/ui/Modal';
 import UnitSelect from '@/components/ui/UnitSelect';
 import { useRequireAuth } from '@/hooks/useAuth';
-import api, { downloadFile, exportExt } from '@/lib/api';
+import api, { downloadFile, exportExt, fileSlug } from '@/lib/api';
+import { useAuthStore } from '@/store/authStore';
 
 // Isolated so typing a price only re-renders this single cell, not the whole
 // table's column definitions — keeping columns stable is what keeps the input focused.
@@ -73,6 +74,7 @@ function AvailabilityCell({ row, onToggled }) {
 
 export default function VendorProductsPage() {
   const { ready } = useRequireAuth('vendor');
+  const vendorName = useAuthStore((s) => s.vendor?.businessName);
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState('');
   const [stockFilter, setStockFilter] = useState('all'); // all | active | inactive
@@ -123,7 +125,7 @@ export default function VendorProductsPage() {
   };
 
   const exportFile = (format) =>
-    downloadFile(`/vendor/products/history/export?format=${format}`, `price-history.${exportExt(format)}`)
+    downloadFile(`/vendor/products/history/export?format=${format}`, `${fileSlug(vendorName)}-price-history.${exportExt(format)}`)
       .catch((e) => toast.error(e.message || 'Download failed.'));
 
   const onAvailabilityToggled = useCallback((id, status) => {

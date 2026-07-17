@@ -8,7 +8,8 @@ import DataTable from '@/components/ui/DataTable';
 import Modal from '@/components/ui/Modal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { useRequireAuth } from '@/hooks/useAuth';
-import api, { downloadFile, exportExt } from '@/lib/api';
+import api, { downloadFile, exportExt, fileSlug } from '@/lib/api';
+import { useAuthStore } from '@/store/authStore';
 
 const GROUPS = ['Hotels', 'Retail Shops', 'Wholesalers', 'Restaurants', 'Street Vendors', 'Supermarkets', 'Other'];
 
@@ -86,7 +87,7 @@ export default function CustomersPage() {
   };
 
   const exportFile = (format) =>
-    downloadFile(`/vendor/customers/export?format=${format}`, `customers.${exportExt(format)}`)
+    downloadFile(`/vendor/customers/export?format=${format}`, `${fileSlug(vendorName)}-customers.${exportExt(format)}`)
       .catch((e) => toast.error(e.message || 'Download failed.'));
 
   const selectedCount = Object.values(selected).filter(Boolean).length;

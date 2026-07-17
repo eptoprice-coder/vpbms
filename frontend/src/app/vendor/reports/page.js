@@ -7,7 +7,7 @@ import { TrendingUp, Send, UserPlus, Clock } from 'lucide-react';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { useAuthStore } from '@/store/authStore';
 import toast from 'react-hot-toast';
-import api, { downloadFile, exportExt } from '@/lib/api';
+import api, { downloadFile, exportExt, fileSlug } from '@/lib/api';
 
 const toDateInput = (d) => {
   const x = new Date(d);
@@ -70,7 +70,7 @@ export default function VendorReportsPage() {
 
   const exportFile = (format) => {
     const params = new URLSearchParams({ format, ...(range === 'custom' ? custom : { range }) });
-    downloadFile(`/vendor/reports/export?${params.toString()}`, `report.${exportExt(format)}`)
+    downloadFile(`/vendor/reports/export?${params.toString()}`, `${fileSlug(vendor?.businessName)}-report.${exportExt(format)}`)
       .catch((e) => toast.error(e.message || 'Download failed.'));
   };
 

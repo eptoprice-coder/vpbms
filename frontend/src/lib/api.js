@@ -49,7 +49,8 @@ export const downloadFile = async (path, filename) => {
 
   const dispo = res.headers['content-disposition'];
   const match = dispo && /filename="?([^";]+)"?/.exec(dispo);
-  const name = (match && match[1]) || filename;
+  // Caller-provided name wins (it includes the vendor name); server name is the fallback.
+  const name = filename || (match && match[1]) || 'download';
   const blob = res.data;
 
   // Phone / PWA path only: share sheet handles files where downloads can't.
@@ -79,5 +80,8 @@ export const downloadFile = async (path, filename) => {
 };
 
 export const exportExt = (format) => (format === 'excel' ? 'xlsx' : 'pdf');
+
+// "Fresh Mart Vegetables" -> "Fresh-Mart-Vegetables" for use in filenames.
+export const fileSlug = (name) => String(name || '').trim().replace(/[^\w஀-௿ -]/g, '').replace(/\s+/g, '-') || 'vendor';
 
 export default api;

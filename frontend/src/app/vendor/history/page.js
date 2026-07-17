@@ -6,10 +6,12 @@ import DataTable from '@/components/ui/DataTable';
 import PriceTrendChart from '@/components/ui/PriceTrendChart';
 import { useRequireAuth } from '@/hooks/useAuth';
 import toast from 'react-hot-toast';
-import api, { downloadFile, exportExt } from '@/lib/api';
+import api, { downloadFile, exportExt, fileSlug } from '@/lib/api';
+import { useAuthStore } from '@/store/authStore';
 
 export default function HistoryPage() {
   const { ready } = useRequireAuth('vendor');
+  const vendorName = useAuthStore((s) => s.vendor?.businessName);
   const [tab, setTab] = useState('price');
   const [priceHistory, setPriceHistory] = useState([]);
   const [messageHistory, setMessageHistory] = useState([]);
@@ -25,7 +27,7 @@ export default function HistoryPage() {
   }, [ready]);
 
   const exportPriceFile = (format) =>
-    downloadFile(`/vendor/products/history/export?format=${format}`, `price-history.${exportExt(format)}`)
+    downloadFile(`/vendor/products/history/export?format=${format}`, `${fileSlug(vendorName)}-price-history.${exportExt(format)}`)
       .catch((e) => toast.error(e.message || 'Download failed.'));
 
   // Unique products present in the history, for the trend selector.
