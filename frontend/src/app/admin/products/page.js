@@ -61,6 +61,14 @@ export default function ProductMasterPage() {
     { header: 'Product', accessorKey: 'name' },
     { header: 'Tamil Name', accessorKey: 'tamilName' },
     { header: 'Category', accessorKey: 'category.name', cell: (i) => i.row.original.category?.name },
+    { header: 'Vendor', accessorKey: 'createdByVendor.businessName', cell: (i) => {
+      const v = i.row.original.createdByVendor;
+      return v ? (
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-accent-500/15 text-accent-600 dark:text-accent-300">{v.businessName}</span>
+      ) : (
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-brand-500/15 text-brand-600 dark:text-brand-300">Global (all vendors)</span>
+      );
+    }},
     { header: 'Unit', accessorKey: 'unit' },
     { header: 'Default Qty', accessorKey: 'defaultQuantity' },
     { header: 'Status', accessorKey: 'status', cell: (i) => (

@@ -9,7 +9,10 @@ const listProducts = asyncHandler(async (req, res) => {
   const filter = {};
   if (category) filter.category = category;
   if (search) filter.$text = { $search: search };
-  const products = await Product.find(filter).populate('category', 'name').sort({ name: 1 });
+  const products = await Product.find(filter)
+    .populate('category', 'name')
+    .populate('createdByVendor', 'businessName')
+    .sort({ name: 1 });
   res.json({ success: true, data: products });
 });
 
