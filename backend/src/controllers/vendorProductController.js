@@ -6,8 +6,14 @@ const logActivity = require('../middleware/activityLogger');
 const { exportToExcel, exportToPDF } = require('../utils/export');
 
 // Ensures a VendorProduct row exists for every active master product in the vendor's category.
+// Only global (admin-added) products and the vendor's OWN products are synced — one vendor's
+// private products never appear in another vendor's sheet.
 const syncVendorProducts = async (vendorId, categoryId) => {
-  const products = await Product.find({ category: categoryId, status: 'active' });
+  const products = await Product.find({
+    category: categoryId,
+    status: 'active',
+    $or: [{ createdByVendor: null }, { createdByVendor: { $exists: false } }, { createdByVendor: vendorId }],
+  });
   const existing = await VendorProduct.find({ vendor: vendorId }).select('product');
   const existingIds = new Set(existing.map((e) => String(e.product)));
   const missing = products.filter((p) => !existingIds.has(String(p._id)));
@@ -15,6 +21,15 @@ const syncVendorProducts = async (vendorId, categoryId) => {
     await VendorProduct.insertMany(
       missing.map((p) => ({ vendor: vendorId, product: p._id, quantityAvailable: p.defaultQuantity || 0, currentPrice: 0 }))
     );
+  }
+
+  // Remove rows that leaked in before ownership scoping: products private to ANOTHER vendor.
+  const foreignPrivate = await Product.find({
+    category: categoryId,
+    createdByVendor: { $nin: [null, vendorId] },
+  }).select('_id');
+  if (foreignPrivate.length) {
+    await VendorProduct.deleteMany({ vendor: vendorId, product: { $in: foreignPrivate.map((p) => p._id) } });
   }
 };
 
@@ -56,10 +71,12 @@ const addVendorProduct = asyncHandler(async (req, res) => {
   const vendor = req.vendor;
   const categoryId = vendor.category._id || vendor.category;
 
-  // Product names must be unique within the category (case-insensitive).
+  // Product names must be unique among products this vendor can see
+  // (global catalog + their own private products), case-insensitive.
   const duplicate = await Product.findOne({
     category: categoryId,
     name: new RegExp(`^${String(name).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'),
+    $or: [{ createdByVendor: null }, { createdByVendor: { $exists: false } }, { createdByVendor: vendor._id }],
   });
   if (duplicate) {
     return res.status(409).json({ success: false, message: `"${duplicate.name}" already exists. Product names must be unique.` });
@@ -72,6 +89,7 @@ const addVendorProduct = asyncHandler(async (req, res) => {
     unit,
     defaultQuantity: 0,
     status: 'active',
+    createdByVendor: vendor._id, // private to this vendor
   });
 
   const vp = await VendorProduct.create({

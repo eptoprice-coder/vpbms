@@ -6,6 +6,8 @@ const PORT = process.env.PORT || 5000;
 
 const start = async () => {
   await connectDB();
+  // Idempotent data fix-ups (safe to run on every boot)
+  require('./utils/migrations').migratePrivateProducts();
   app.listen(PORT, () => {
     console.log(`[Server] VPBMS API running on port ${PORT} (${process.env.NODE_ENV || 'development'})`);
   });
