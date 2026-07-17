@@ -4,16 +4,11 @@ const PriceHistory = require('../models/PriceHistory');
 const asyncHandler = require('../middleware/asyncHandler');
 const logActivity = require('../middleware/activityLogger');
 const { exportToExcel, exportToPDF } = require('../utils/export');
+const { validateVendorDateRange } = require('../utils/dateRange');
 
 // Ensures a VendorProduct row exists for every active master product in the vendor's category.
-// Only global (admin-added) products and the vendor's OWN products are synced — one vendor's
-// private products never appear in another vendor's sheet.
 const syncVendorProducts = async (vendorId, categoryId) => {
-  const products = await Product.find({
-    category: categoryId,
-    status: 'active',
-    $or: [{ createdByVendor: null }, { createdByVendor: { $exists: false } }, { createdByVendor: vendorId }],
-  });
+  const products = await Product.find({ category: categoryId, status: 'active' });
   const existing = await VendorProduct.find({ vendor: vendorId }).select('product');
   const existingIds = new Set(existing.map((e) => String(e.product)));
   const missing = products.filter((p) => !existingIds.has(String(p._id)));
@@ -21,15 +16,6 @@ const syncVendorProducts = async (vendorId, categoryId) => {
     await VendorProduct.insertMany(
       missing.map((p) => ({ vendor: vendorId, product: p._id, quantityAvailable: p.defaultQuantity || 0, currentPrice: 0 }))
     );
-  }
-
-  // Remove rows that leaked in before ownership scoping: products private to ANOTHER vendor.
-  const foreignPrivate = await Product.find({
-    category: categoryId,
-    createdByVendor: { $nin: [null, vendorId] },
-  }).select('_id');
-  if (foreignPrivate.length) {
-    await VendorProduct.deleteMany({ vendor: vendorId, product: { $in: foreignPrivate.map((p) => p._id) } });
   }
 };
 
@@ -71,17 +57,6 @@ const addVendorProduct = asyncHandler(async (req, res) => {
   const vendor = req.vendor;
   const categoryId = vendor.category._id || vendor.category;
 
-  // Product names must be unique among products this vendor can see
-  // (global catalog + their own private products), case-insensitive.
-  const duplicate = await Product.findOne({
-    category: categoryId,
-    name: new RegExp(`^${String(name).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'),
-    $or: [{ createdByVendor: null }, { createdByVendor: { $exists: false } }, { createdByVendor: vendor._id }],
-  });
-  if (duplicate) {
-    return res.status(409).json({ success: false, message: `"${duplicate.name}" already exists. Product names must be unique.` });
-  }
-
   const product = await Product.create({
     name,
     tamilName,
@@ -89,7 +64,6 @@ const addVendorProduct = asyncHandler(async (req, res) => {
     unit,
     defaultQuantity: 0,
     status: 'active',
-    createdByVendor: vendor._id, // private to this vendor
   });
 
   const vp = await VendorProduct.create({
@@ -178,37 +152,17 @@ const bulkUpdatePrices = asyncHandler(async (req, res) => {
   res.json({ success: true, updated: results.length, data: results });
 });
 
-// PATCH /api/vendor/products/:id/availability
-// Marks a product available (active) or unavailable (inactive — out of stock / discontinued).
-const toggleAvailability = asyncHandler(async (req, res) => {
-  const vp = await VendorProduct.findOne({ _id: req.params.id, vendor: req.vendor._id }).populate('product', 'name');
-  if (!vp) return res.status(404).json({ success: false, message: 'Product not found.' });
-
-  vp.status = vp.status === 'active' ? 'inactive' : 'active';
-  vp.lastUpdated = new Date();
-  await vp.save();
-
-  await logActivity({
-    user: req.user._id,
-    vendor: req.vendor._id,
-    action: 'PRODUCT_UPDATED',
-    description: `Marked "${vp.product?.name}" as ${vp.status === 'active' ? 'available' : 'unavailable'}`,
-    ip: req.ip,
-  });
-
-  res.json({ success: true, data: { _id: vp._id, status: vp.status } });
-});
-
 // GET /api/vendor/products/history
 const priceHistory = asyncHandler(async (req, res) => {
   const { from, to, product, page = 1, limit = 50 } = req.query;
-  const filter = { vendor: req.vendor._id };
-  if (product) filter.product = product;
-  if (from || to) {
-    filter.createdAt = {};
-    if (from) filter.createdAt.$gte = new Date(from);
-    if (to) filter.createdAt.$lte = new Date(to);
+
+  const range = validateVendorDateRange(req.vendor.createdAt, from, to);
+  if (!range.valid) {
+    return res.status(422).json({ success: false, message: range.message });
   }
+
+  const filter = { vendor: req.vendor._id, createdAt: { $gte: range.from, $lte: range.to } };
+  if (product) filter.product = product;
 
   const total = await PriceHistory.countDocuments(filter);
   const history = await PriceHistory.find(filter)
@@ -221,9 +175,16 @@ const priceHistory = asyncHandler(async (req, res) => {
   res.json({ success: true, data: history, total, page: Number(page), limit: Number(limit) });
 });
 
-// GET /api/vendor/products/history/export?format=pdf|excel
+// GET /api/vendor/products/history/export?format=pdf|excel&from=&to=
 const exportPriceHistory = asyncHandler(async (req, res) => {
-  const history = await PriceHistory.find({ vendor: req.vendor._id })
+  const { from, to } = req.query;
+
+  const range = validateVendorDateRange(req.vendor.createdAt, from, to);
+  if (!range.valid) {
+    return res.status(422).json({ success: false, message: range.message });
+  }
+
+  const history = await PriceHistory.find({ vendor: req.vendor._id, createdAt: { $gte: range.from, $lte: range.to } })
     .populate('product', 'name unit')
     .populate('updatedBy', 'name')
     .sort({ createdAt: -1 })
@@ -252,4 +213,4 @@ const exportPriceHistory = asyncHandler(async (req, res) => {
   return exportToPDF(res, { title: 'Price Update History', columns, rows });
 });
 
-module.exports = { listVendorProducts, addVendorProduct, bulkUpdatePrices, toggleAvailability, priceHistory, exportPriceHistory };
+module.exports = { listVendorProducts, addVendorProduct, bulkUpdatePrices, priceHistory, exportPriceHistory };
