@@ -75,6 +75,7 @@ export default function VendorProductsPage() {
   const { ready } = useRequireAuth('vendor');
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState('');
+  const [stockFilter, setStockFilter] = useState('all'); // all | active | inactive
   const [saving, setSaving] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [addForm, setAddForm] = useState({ name: '', tamilName: '', unit: 'kg', currentPrice: '' });
@@ -166,12 +167,32 @@ export default function VendorProductsPage() {
         </div>
       </div>
 
-      <div className="relative max-w-sm mb-4">
-        <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
-        <input className="input-field pl-9" placeholder="Search products..." value={search} onChange={(e) => setSearch(e.target.value)} />
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <div className="relative flex-1 min-w-[12rem] max-w-sm">
+          <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
+          <input className="input-field pl-9" placeholder="Search products..." value={search} onChange={(e) => setSearch(e.target.value)} />
+        </div>
+        {[['all', 'All'], ['active', 'In stock'], ['inactive', 'No stock']].map(([v, l]) => (
+          <button
+            key={v}
+            onClick={() => setStockFilter(v)}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors border ${
+              stockFilter === v
+                ? 'bg-brand-600 text-white border-brand-600'
+                : 'bg-white dark:bg-navy-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-white/10'
+            }`}
+          >
+            {l}
+          </button>
+        ))}
       </div>
 
-      <DataTable columns={columns} data={products} pageSize={15} compact />
+      <DataTable
+        columns={columns}
+        data={stockFilter === 'all' ? products : products.filter((p) => p.status === stockFilter)}
+        pageSize={15}
+        compact
+      />
 
       <Modal
         open={addModalOpen}

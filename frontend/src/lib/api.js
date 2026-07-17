@@ -52,20 +52,30 @@ export const downloadFile = async (path, filename) => {
   const name = (match && match[1]) || filename;
   const blob = res.data;
 
-  // Phone / PWA path: share sheet handles files where downloads can't.
-  try {
-    const file = new File([blob], name, { type: blob.type || 'application/octet-stream' });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], title: name });
-      return;
+  // Phone / PWA path only: share sheet handles files where downloads can't.
+  const isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
+  if (isMobile) {
+    try {
+      const file = new File([blob], name, { type: blob.type || 'application/octet-stream' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: name });
+        return;
+      }
+    } catch (e) {
+      if (e?.name === 'AbortError') return; // user closed the share sheet — not an error
+      // fall through to classic download
     }
-  } catch (e) {
-    if (e?.name === 'AbortError') return; // user closed the share sheet — not an error
-    // fall through to classic download
   }
 
-  const { saveAs } = await import('file-saver');
-  saveAs(blob, name);
+  // Desktop (and mobile fallback): plain anchor download — no library needed.
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
 };
 
 export const exportExt = (format) => (format === 'excel' ? 'xlsx' : 'pdf');

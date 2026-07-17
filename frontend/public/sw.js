@@ -1,5 +1,5 @@
 /* Eptomart VPB service worker — offline shell + static asset caching. */
-const CACHE = 'vpbms-v2';
+const CACHE = 'vpbms-v3';
 const PRECACHE = [
   '/login',
   '/manifest.json',

@@ -14,6 +14,9 @@ export default function HistoryPage() {
   const [priceHistory, setPriceHistory] = useState([]);
   const [messageHistory, setMessageHistory] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState('');
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
+  const [msgStatus, setMsgStatus] = useState(''); // '' | sent | pending | failed
 
   useEffect(() => {
     if (!ready) return;
@@ -34,12 +37,26 @@ export default function HistoryPage() {
     return [...map.values()].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
   }, [priceHistory]);
 
+  // Date-range filter applies to both tabs.
+  const inRange = (d) => {
+    const t = new Date(d).getTime();
+    if (from && t < new Date(from).getTime()) return false;
+    if (to && t > new Date(to).getTime() + 24 * 3600 * 1000 - 1) return false; // inclusive of the "to" day
+    return true;
+  };
+
+  const rangedPriceHistory = useMemo(() => priceHistory.filter((h) => inRange(h.createdAt)), [priceHistory, from, to]); // eslint-disable-line
   const selectedEntries = useMemo(
-    () => (selectedProduct ? priceHistory.filter((h) => h.product?._id === selectedProduct) : []),
-    [priceHistory, selectedProduct]
+    () => (selectedProduct ? rangedPriceHistory.filter((h) => h.product?._id === selectedProduct) : []),
+    [rangedPriceHistory, selectedProduct]
   );
   const selectedProductObj = products.find((p) => p._id === selectedProduct);
-  const visibleHistory = selectedProduct ? selectedEntries : priceHistory;
+  const visibleHistory = selectedProduct ? selectedEntries : rangedPriceHistory;
+
+  const visibleMessages = useMemo(
+    () => messageHistory.filter((m) => inRange(m.createdAt) && (!msgStatus || m.status === msgStatus)),
+    [messageHistory, from, to, msgStatus] // eslint-disable-line
+  );
 
   const priceColumns = useMemo(() => [
     { header: 'Date', accessorKey: 'createdAt', cell: (i) => new Date(i.row.original.createdAt).toLocaleString() },
@@ -87,6 +104,34 @@ export default function HistoryPage() {
         </div>
       </div>
 
+      {/* Filters */}
+      <div className="flex flex-wrap items-end gap-3 mb-4">
+        <div>
+          <label className="text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-1 block">From</label>
+          <input type="date" className="input-field w-auto" value={from} onChange={(e) => setFrom(e.target.value)} />
+        </div>
+        <div>
+          <label className="text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-1 block">To</label>
+          <input type="date" className="input-field w-auto" value={to} onChange={(e) => setTo(e.target.value)} />
+        </div>
+        {tab === 'messages' && (
+          <div>
+            <label className="text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-1 block">Status</label>
+            <select className="input-field w-auto" value={msgStatus} onChange={(e) => setMsgStatus(e.target.value)}>
+              <option value="">All statuses</option>
+              <option value="sent">Sent</option>
+              <option value="pending">Pending</option>
+              <option value="failed">Failed</option>
+            </select>
+          </div>
+        )}
+        {(from || to || msgStatus) && (
+          <button onClick={() => { setFrom(''); setTo(''); setMsgStatus(''); }} className="btn-secondary text-xs">
+            Clear filters
+          </button>
+        )}
+      </div>
+
       {tab === 'price' && (
         <div className="premium-card p-5 mb-4 animate-rise">
           <div className="relative">
@@ -120,7 +165,7 @@ export default function HistoryPage() {
         </div>
       )}
 
-      {tab === 'price' ? <DataTable columns={priceColumns} data={visibleHistory} pageSize={15} /> : <DataTable columns={messageColumns} data={messageHistory} pageSize={15} />}
+      {tab === 'price' ? <DataTable columns={priceColumns} data={visibleHistory} pageSize={15} /> : <DataTable columns={messageColumns} data={visibleMessages} pageSize={15} />}
     </AppShell>
   );
 }
