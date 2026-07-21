@@ -4,198 +4,33 @@
 
 @layer base {
   html { @apply scroll-smooth; }
-  body { @apply bg-gray-50 dark:bg-navy-950 text-gray-800 dark:text-gray-50 transition-colors duration-200; }
+  body { @apply bg-gray-50 dark:bg-navy-950 text-gray-800 dark:text-gray-100 transition-colors duration-200; }
+
+  /* Removes the mobile tap-highlight flash and any residual click delay on
+     interactive elements, and gives every tap instant (sub-frame) feedback. */
+  button, a, [role='button'], input[type='button'], input[type='submit'] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
 }
 
 @layer components {
   .glass-card {
-    @apply rounded-2xl border border-gray-200 dark:border-white/10 bg-white/90 dark:bg-navy-900/60 backdrop-blur-xl shadow-glass;
+    @apply rounded-2xl border border-white/20 dark:border-white/10 bg-white/70 dark:bg-navy-900/60 backdrop-blur-xl shadow-glass;
   }
   .btn-primary {
-    @apply inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 to-accent-600 hover:from-brand-700 hover:to-accent-700 text-white text-sm font-medium px-4 py-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 to-accent-600 hover:from-brand-700 hover:to-accent-700 active:scale-95 active:from-brand-700 active:to-accent-700 text-white text-sm font-medium px-4 py-2 transition-all duration-100 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100;
   }
   .btn-secondary {
-    @apply inline-flex items-center gap-2 rounded-xl bg-white hover:bg-gray-50 dark:bg-navy-800 dark:hover:bg-navy-700 text-gray-800 dark:text-gray-100 text-sm font-semibold px-4 py-2 transition-colors border border-gray-300 dark:border-white/10 shadow-sm;
+    @apply inline-flex items-center gap-2 rounded-xl bg-gray-100 hover:bg-gray-200 active:scale-95 active:bg-gray-300 dark:bg-navy-800 dark:hover:bg-navy-700 dark:active:bg-navy-600 text-gray-700 dark:text-gray-200 text-sm font-medium px-4 py-2 transition-all duration-100;
   }
   .btn-danger {
-    @apply inline-flex items-center gap-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2 transition-colors;
+    @apply inline-flex items-center gap-2 rounded-xl bg-red-600 hover:bg-red-700 active:scale-95 active:bg-red-800 text-white text-sm font-medium px-4 py-2 transition-all duration-100;
   }
   .input-field {
-    @apply w-full rounded-xl border border-gray-300 dark:border-navy-700 bg-white dark:bg-navy-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-accent-500;
+    @apply w-full rounded-xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-500;
   }
   .stat-card {
     @apply glass-card p-5 flex flex-col gap-1 hover:shadow-lg transition-shadow;
   }
-
-  /* ===== Premium layer ===== */
-
-  /* Glass card with animated gradient border */
-  .premium-card {
-    @apply relative rounded-2xl bg-white dark:bg-navy-900/70 backdrop-blur-2xl overflow-hidden;
-    border: 1px solid transparent;
-    background-clip: padding-box;
-    box-shadow: 0 4px 24px -6px rgba(15, 23, 42, 0.12);
-  }
-  .dark .premium-card {
-    box-shadow: 0 8px 40px -8px rgba(5, 9, 20, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  }
-  .premium-card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 1px;
-    background: linear-gradient(135deg, rgba(22, 163, 74, 0.55), rgba(15, 23, 42, 0.14) 35%, rgba(15, 23, 42, 0.1) 65%, rgba(234, 88, 12, 0.55));
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
-  }
-  .dark .premium-card::before {
-    background: linear-gradient(135deg, rgba(34, 197, 94, 0.45), rgba(255, 255, 255, 0.08) 35%, rgba(255, 255, 255, 0.04) 65%, rgba(249, 115, 22, 0.45));
-  }
-  .premium-card-hover {
-    @apply transition-all duration-300;
-  }
-  .premium-card-hover:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 20px 60px -12px rgba(5, 9, 20, 0.65), 0 0 40px -12px rgba(34, 197, 94, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  }
-
-  /* Shimmering CTA button */
-  .btn-premium {
-    @apply relative inline-flex items-center justify-center gap-2 rounded-xl text-white text-sm font-semibold px-4 py-3 overflow-hidden transition-transform duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
-    background: linear-gradient(90deg, #16a34a, #4ade80, #f97316, #16a34a);
-    background-size: 300% 100%;
-    animation: gradient-pan 6s ease infinite;
-    box-shadow: 0 4px 24px -4px rgba(34, 197, 94, 0.45), 0 4px 24px -4px rgba(249, 115, 22, 0.35);
-  }
-  .btn-premium:hover:not(:disabled) { transform: translateY(-1px) scale(1.01); }
-  .btn-premium:active:not(:disabled) { transform: translateY(0) scale(0.99); }
-  .btn-premium::after {
-    content: '';
-    position: absolute;
-    top: 0; left: -60%;
-    width: 40%; height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
-    transform: skewX(-20deg);
-    animation: shimmer-sweep 3.2s ease-in-out infinite;
-  }
-
-  /* Frosted input on dark backgrounds */
-  .input-premium {
-    @apply w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder:text-gray-500 backdrop-blur-sm transition-all duration-200 focus:outline-none;
-  }
-  .input-premium:focus {
-    border-color: rgba(249, 115, 22, 0.6);
-    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15), 0 0 24px -6px rgba(249, 115, 22, 0.4);
-    background: rgba(255, 255, 255, 0.08);
-  }
-
-  /* Animated gradient headline text — deep, saturated colors in light mode,
-     bright pastel sheen in dark mode. Both high-contrast on their background. */
-  .text-gradient-animated {
-    @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(100deg, #15803d 0%, #16a34a 30%, #c2410c 60%, #ea580c 80%, #15803d 100%);
-    background-size: 220% 100%;
-    animation: gradient-pan 5s ease infinite;
-  }
-  .dark .text-gradient-animated {
-    background-image: linear-gradient(100deg, #86efac 0%, #d9fbe6 22%, #ffffff 40%, #ffe8cf 58%, #fdba74 78%, #86efac 100%);
-  }
-}
-
-@layer utilities {
-  /* Aurora background blobs */
-  .aurora-blob {
-    @apply absolute rounded-full pointer-events-none;
-    filter: blur(90px);
-    opacity: 0.5;
-    will-change: transform;
-  }
-  .aurora-1 { background: radial-gradient(circle, rgba(34, 197, 94, 0.55), transparent 70%); animation: drift-1 18s ease-in-out infinite; }
-  .aurora-2 { background: radial-gradient(circle, rgba(249, 115, 22, 0.45), transparent 70%); animation: drift-2 22s ease-in-out infinite; }
-  .aurora-3 { background: radial-gradient(circle, rgba(44, 71, 126, 0.7), transparent 70%); animation: drift-3 26s ease-in-out infinite; }
-
-  /* Faint perspective grid */
-  .bg-grid-faint {
-    background-image:
-      linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-    background-size: 44px 44px;
-    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 30%, transparent 75%);
-    mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 30%, transparent 75%);
-  }
-
-  /* Floating particles */
-  .particle {
-    @apply absolute rounded-full pointer-events-none;
-    background: rgba(255, 255, 255, 0.5);
-    animation: float-up linear infinite;
-  }
-
-  /* Staggered entrance */
-  .animate-rise { opacity: 0; animation: rise-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
-  .delay-1 { animation-delay: 0.08s; }
-  .delay-2 { animation-delay: 0.16s; }
-  .delay-3 { animation-delay: 0.24s; }
-  .delay-4 { animation-delay: 0.32s; }
-  .delay-5 { animation-delay: 0.4s; }
-  .delay-6 { animation-delay: 0.48s; }
-
-  .animate-logo-glow { animation: logo-glow 4s ease-in-out infinite; }
-  .animate-spin-slow { animation: spin 14s linear infinite; }
-}
-
-@keyframes gradient-pan {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-@keyframes shimmer-sweep {
-  0% { left: -60%; }
-  55%, 100% { left: 130%; }
-}
-@keyframes drift-1 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(60px, -50px) scale(1.15); }
-  66% { transform: translate(-40px, 40px) scale(0.95); }
-}
-@keyframes drift-2 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(-70px, 40px) scale(1.1); }
-  66% { transform: translate(50px, -30px) scale(0.9); }
-}
-@keyframes drift-3 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(40px, 60px) scale(1.2); }
-}
-@keyframes float-up {
-  0% { transform: translateY(0); opacity: 0; }
-  10% { opacity: 0.7; }
-  90% { opacity: 0.7; }
-  100% { transform: translateY(-110vh); opacity: 0; }
-}
-@keyframes rise-in {
-  from { opacity: 0; transform: translateY(18px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes logo-glow {
-  0%, 100% { box-shadow: 0 0 30px -6px rgba(34, 197, 94, 0.5), 0 0 60px -18px rgba(249, 115, 22, 0.4); }
-  50% { box-shadow: 0 0 50px -6px rgba(249, 115, 22, 0.55), 0 0 80px -18px rgba(34, 197, 94, 0.45); }
-}
-
-/* Readability lift for both themes: mid-grays are too faint on their backgrounds.
-   Placed after the Tailwind layers so these win over both plain and dark: variant utilities.
-   Light mode: darken faint grays. */
-.text-gray-400 { color: #64748b; }
-.text-gray-500 { color: #475569; }
-/* Dark mode: brighten dull grays. */
-.dark .text-gray-300, .dark .dark\:text-gray-300 { color: #dce4ef; }
-.dark .text-gray-400, .dark .dark\:text-gray-400 { color: #bac5d7; }
-.dark .text-gray-500, .dark .dark\:text-gray-500 { color: #94a2b9; }
-
-@media (prefers-reduced-motion: reduce) {
-  .aurora-1, .aurora-2, .aurora-3, .particle, .btn-premium, .btn-premium::after,
-  .text-gradient-animated, .animate-logo-glow, .animate-spin-slow { animation: none !important; }
-  .animate-rise { animation-duration: 0.01s !important; }
 }
