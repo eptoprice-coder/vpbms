@@ -1,7 +1,9 @@
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL ? `${process.env.NEXT_PUBLIC_API_URL}/api` : '/api',
+  timeout: 20000, // if the server doesn't answer in 20s, fail loudly instead of hanging forever
 });
 
 api.interceptors.request.use((config) => {
@@ -21,6 +23,14 @@ api.interceptors.response.use(
       if (!window.location.pathname.includes('/login')) {
         window.location.href = '/login';
       }
+    }
+    // No response at all (timeout, or the server is asleep/unreachable) — say so instead
+    // of leaving the button looking like it did nothing.
+    if (typeof window !== 'undefined' && !err.response) {
+      const message = err.code === 'ECONNABORTED'
+        ? 'The server is taking a while to respond (it may be waking up). Please try again in a few seconds.'
+        : 'Could not reach the server. Check your connection and try again.';
+      toast.error(message);
     }
     return Promise.reject(err);
   }

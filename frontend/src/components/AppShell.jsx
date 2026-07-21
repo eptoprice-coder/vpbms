@@ -40,8 +40,11 @@ export default function AppShell({ role, children }) {
   const [pwOpen, setPwOpen] = useState(false);
   const nav = role === 'admin' ? ADMIN_NAV : VENDOR_NAV;
 
-  const handleLogout = async () => {
-    try { await api.post('/auth/logout'); } catch (e) { /* ignore */ }
+  const handleLogout = () => {
+    // Clear the session and leave immediately — logout should feel instant no matter
+    // how slow (or asleep) the backend is. Tell the server in the background; if that
+    // call fails or is slow, it doesn't block the user from leaving.
+    api.post('/auth/logout').catch(() => {});
     localStorage.removeItem('vpbms_token');
     clearAuth();
     toast.success('Logged out.');
