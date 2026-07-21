@@ -83,7 +83,10 @@ export default function AppShell({ role, children }) {
             style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
           >
             <div className="flex items-center gap-3">
-              <button className="md:hidden text-gray-500" onClick={() => setMobileOpen(true)}>
+              <button
+                className="md:hidden text-gray-500 p-2 -m-2 rounded-lg transition-all duration-100 active:scale-90 active:bg-gray-100 dark:active:bg-navy-800"
+                onClick={() => setMobileOpen(true)}
+              >
                 <Menu size={22} />
               </button>
               <div className="hidden sm:flex items-center gap-2 text-sm text-gray-500">
@@ -177,7 +180,7 @@ function ChangePasswordModal({ open, onClose }) {
           <div className="relative">
             <input type={show ? 'text' : 'password'} className="input-field pr-10" value={form.current}
               onChange={(e) => setForm({ ...form, current: e.target.value })} />
-            <button type="button" onClick={() => setShow((s) => !s)} className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+            <button type="button" onClick={() => setShow((s) => !s)} className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 active:scale-90 transition-transform">
               {show ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>

@@ -115,7 +115,7 @@ export default function VendorProductsPage() {
         <button
           onClick={() => toggleAvailability(row._id)}
           title="Click to toggle availability"
-          className={`px-2 py-1 rounded-full text-xs transition-colors ${active ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}
+          className={`px-2 py-1 rounded-full text-xs transition-all duration-100 active:scale-90 ${active ? 'bg-green-100 text-green-700 hover:bg-green-200 active:bg-green-300' : 'bg-gray-200 text-gray-600 hover:bg-gray-300 active:bg-gray-400'}`}
         >
           {row.status}
         </button>

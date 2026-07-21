@@ -376,16 +376,16 @@ export default function WhatsappSendPage() {
             <div className="inline-flex rounded-xl border border-gray-300 dark:border-white/15 overflow-hidden">
               <button
                 onClick={() => pickFormat('text')}
-                className={`px-3 py-2 text-xs font-semibold flex items-center gap-1.5 transition-colors ${
-                  shareFormat === 'text' ? 'bg-gradient-to-r from-brand-600 to-brand-500 text-white' : 'bg-white dark:bg-navy-800 text-gray-600 dark:text-gray-300'
+                className={`px-3 py-2 text-xs font-semibold flex items-center gap-1.5 transition-all duration-100 active:scale-95 ${
+                  shareFormat === 'text' ? 'bg-gradient-to-r from-brand-600 to-brand-500 text-white' : 'bg-white dark:bg-navy-800 text-gray-600 dark:text-gray-300 active:bg-gray-100 dark:active:bg-navy-700'
                 }`}
               >
                 <MessageCircle size={13} /> Message
               </button>
               <button
                 onClick={() => pickFormat('pdf')}
-                className={`px-3 py-2 text-xs font-semibold flex items-center gap-1.5 transition-colors ${
-                  shareFormat === 'pdf' ? 'bg-gradient-to-r from-accent-600 to-accent-500 text-white' : 'bg-white dark:bg-navy-800 text-gray-600 dark:text-gray-300'
+                className={`px-3 py-2 text-xs font-semibold flex items-center gap-1.5 transition-all duration-100 active:scale-95 ${
+                  shareFormat === 'pdf' ? 'bg-gradient-to-r from-accent-600 to-accent-500 text-white' : 'bg-white dark:bg-navy-800 text-gray-600 dark:text-gray-300 active:bg-gray-100 dark:active:bg-navy-700'
                 }`}
               >
                 <FileText size={13} /> PDF
@@ -550,7 +550,7 @@ export default function WhatsappSendPage() {
                   {groups.map((g) => (
                     <span key={g} className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full bg-accent-500/15 text-accent-600 dark:text-accent-300 border border-accent-500/25">
                       <Users2 size={11} /> {g}
-                      <button onClick={() => removeGroup(g)} className="hover:text-red-500"><X size={11} /></button>
+                      <button onClick={() => removeGroup(g)} className="hover:text-red-500 active:scale-90 active:text-red-600 transition-transform"><X size={11} /></button>
                     </span>
                   ))}
                 </div>

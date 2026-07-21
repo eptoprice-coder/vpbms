@@ -121,7 +121,7 @@ export default function VendorDashboard() {
             {/* Vendor logo with one-tap upload */}
             <button
               onClick={() => fileRef.current?.click()}
-              className="relative group shrink-0 h-16 w-16 md:h-20 md:w-20 rounded-2xl overflow-hidden border border-white/20 shadow-[0_0_24px_-6px_rgba(34,197,94,0.45)] focus:outline-none focus:ring-2 focus:ring-brand-500"
+              className="relative group shrink-0 h-16 w-16 md:h-20 md:w-20 rounded-2xl overflow-hidden border border-white/20 shadow-[0_0_24px_-6px_rgba(34,197,94,0.45)] focus:outline-none focus:ring-2 focus:ring-brand-500 active:scale-95 transition-transform duration-100"
               title="Upload your logo"
             >
               {logo ? (
